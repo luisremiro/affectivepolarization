@@ -5,7 +5,7 @@ date: '2022'
 output:
   html_document:
     keep_md: true
-    pdf_document:
+    pdf_document: 
       fig_caption: yes
       number_sections: yes
   pdf_document: default
@@ -23,7 +23,6 @@ urlcolor: blue
 knitr::opts_chunk$set(echo = FALSE, eval=TRUE, include = TRUE, warning=FALSE, message = FALSE)
 options(tinytex.verbose = TRUE)
 ```
-
 
 ```{r include=FALSE}
 
@@ -92,7 +91,6 @@ if(!require(jtools)){
 #devtools::install_github("DillonHammill/rhandsontable")
 ```
 
-
 # Polarización afectiva - Método Wagner
 
 ```{r include=FALSE}
@@ -153,7 +151,6 @@ head(df)[c(118:126)]
 
 ```
 
-
 ```{r include=FALSE}
 #CSES 1-4 dataframe
 
@@ -173,7 +170,6 @@ pol.af <- na.omit(pol.af)
 
 ```
 
-
 ```{r include=FALSE}
 #CSES round 5
 
@@ -191,7 +187,6 @@ pol.af <- na.omit(pol.af)
 
 cses5 <- read_csv("data/cses5.csv") %>% select(E1005,E1004, E1006_NAM,E1008, E1015, E1022, E1032,E1033,E1034,E2001_Y, E2002, E2003, E2013, E2010, E3024_1, E3024_2, E3024_3, E3024_4, E3020, E3017_A,E3017_B,E3017_C, E3017_D, E3017_E, E3017_F, E3017_G, E3017_H, E3017_I,E3018_A,E3018_B,E3018_C, E3018_D, E3018_E, E3018_F, E3018_G, E3018_H, E3018_I, E3023, E3009, E5001_A, E5001_B, E5001_C, E5001_D, E5001_E, E5001_F, E5001_G,E5001_H, E5001_I, E5005_A, E5005_B, E5005_C, E5005_D, E5005_E, E5005_F, E5005_G,E5005_H, E5005_I, starts_with("E5000"))
 ```
-
 
 ```{r include=FALSE}
 
@@ -225,8 +220,6 @@ cses5 <- cses5 %>% replace_with_na(replace = list(E3017_A = c(97,98,99),
                                                   E2003 = c(97,98,99)))
 
 ```
-
-
 
 ```{r include=FALSE}
 #Tengo que cambiar el nombre de las variables para poder unir ambas bases de datos
@@ -386,16 +379,15 @@ label(cses5_ap2$E5005_I) <- "PERCENT VOTE - PRESIDENT - PARTY I"
 
 It captures the likeability distributed among various parties and leaders in a multi-party system. This index recognizes that individuals may not have a strong partisan identification and, therefore, takes into account all individuals who express liking or disliking of parties and leaders. In addition, this index better captures opposition between groups of party members/leaders than between groups of individual voters or leaders. The formula is as follows:
 
-\[WAP_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - \overline{Like}_{i})^2}\]
+$$WAP_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - \overline{Like}_{i})^2}$$
 
-where \[{g}\] is the in-group, \[{i}\] the individual, \[\[\overline{Like}_{i}\] is the average like and dislike of the individual \[{i}\] and \[V_{g}\] is the size of each party, measured as a ratio in a range from 0 to 1. The average liking should also be weighted by the size of each party and its computation is as follows:
+where $${g}$$ is the in-group, $${i}$$ the individual, $$\[\overline{Like}_{i}$$ is the average like and dislike of the individual $${i}$$ and $$V_{g}$$ is the size of each party, measured as a ratio in a range from 0 to 1. The average liking should also be weighted by the size of each party and its computation is as follows:
 
-\[\overline{Like}_{i} = \sum_{g=1}^g(V_{g} * Like_{ig})\]
+$$\overline{Like}_{i} = \sum_{g=1}^g(V_{g} * Like_{ig})$$
 
 ### Efecto medio ponderado
 
 Therefore, the first thing we need to calculate the distribution of likes and dislikes for each party is the distribution of votes for each party in the last election.
-
 
 ```{r include=FALSE}
 
@@ -492,6 +484,7 @@ cses5_ap3$total.share.pres[cses5_ap3$total.share.pres == 332.38] <- 79.52
 cses5_ap3$total.share.pres[cses5_ap3$total.share.pres == 190.01] <- 97.22
 
 ```
+
 Segun Wagner el tamaño de cada partido esta medido en un rango de 0 a 1, por tanto será necesario dividir los porcentajes de voto entre 100
 
 ```{r Vote share, include=FALSE}
@@ -589,7 +582,6 @@ summary(cses5_ap3$LikeLeaderA)
 
 ```
 
-
 ```{r VotosxPartido, include=FALSE}
 
 cses5_ap3 <- cses5_ap3 %>% mutate(
@@ -610,10 +602,10 @@ Nor.VotI = ifelse(presidencial == 1, Nor.VotPresI, Nor.VotParlI),
 table(cses5_ap3$pais, cses5_ap3$year_election, cses5_ap3$sim_elec)
 
 ```
-En la base de datos hay varios paises que celebraron elecciones simultaneas (presidenciales + parlamentarias). Siguiendo el método de Reiljan (2020) para estos casos, tomaré en cuenta las cuotas de voto que haya recibido cada partido en las elecciones parlamentarias. De esta manera /al menos teoricamente- podriamos capturar todas las preferencias debido a que se presentan más partido. Además no corremos el riesgo de sobre estimar la polarización, en tanto, para unas elecciones presidenciales generalmente solo se presentan candidatos de los partidos mayoritarios o candidaturas que aglomeran preferencias de varios partidos. Sin embargo, las cuotas de voto en elecciones presidenciales se tomar'an en cuenta cuando no se tenga disponible datos para elecciones parlamentarias: Chile	1999, Francia	2002, Francia	2012, Francia	2017 y Estados Unidos	2016 debido a que no hay datos de elecciones parlamentariasdisponibles.
 
+En la base de datos hay varios paises que celebraron elecciones simultaneas (presidenciales + parlamentarias). Siguiendo el método de Reiljan (2020) para estos casos, tomaré en cuenta las cuotas de voto que haya recibido cada partido en las elecciones parlamentarias. De esta manera /al menos teoricamente- podriamos capturar todas las preferencias debido a que se presentan más partido. Además no corremos el riesgo de sobre estimar la polarización, en tanto, para unas elecciones presidenciales generalmente solo se presentan candidatos de los partidos mayoritarios o candidaturas que aglomeran preferencias de varios partidos. Sin embargo, las cuotas de voto en elecciones presidenciales se tomar'an en cuenta cuando no se tenga disponible datos para elecciones parlamentarias: Chile 1999, Francia 2002, Francia 2012, Francia 2017 y Estados Unidos 2016 debido a que no hay datos de elecciones parlamentariasdisponibles.
 
-Una vez depurada la distribución de los votos para cada partido, pasaremos a calcular la media de agrado y desagrado ponderada para cada individuo \[{i}\] sobre cada partido \[{g}\]  
+Una vez depurada la distribución de los votos para cada partido, pasaremos a calcular la media de agrado y desagrado ponderada para cada individuo $${i}$$ sobre cada partido $${g}$$
 
 ```{r Like ponderado, include=FALSE}
 
@@ -636,6 +628,7 @@ cses5_ap3 <- cses5_ap3  %>% rowwise() %>% mutate(
                   LikeLeaderI*Nor.VotI, na.rm = TRUE))
 
 ```
+
 Las observaciones de Mexico en el 2006, al ser una coalición, me generan problemas en el data frame. Por ahora, las excluiré del estudio.
 
 ```{r, include=FALSE}
@@ -644,7 +637,7 @@ cses5_ap4 <- cses5_ap3[cses5_ap3$coalicion == 0,]
 
 ```
 
-Como mínimo, cada observación ha de tener al menos una expresión de agrada-desagrado por dos partidos/líderes para que puedan ser incluidos en el índice. 
+Como mínimo, cada observación ha de tener al menos una expresión de agrada-desagrado por dos partidos/líderes para que puedan ser incluidos en el índice.
 
 ```{r include=FALSE}
 
@@ -678,6 +671,7 @@ cses5_ap5 <- cses5_ap4 %>% filter(!na >= 8,
 #Para el MODULO 2 no se incluyo la pregunta sobre el agrado a lideres
 
 ```
+
 Ya podemos calcular la distribución ponderada de puntuaciones de agrado-desagrado hacia votantes y líderes
 
 ```{r}
@@ -729,7 +723,6 @@ var_lider2 <- namesvar[var_lider]
 
 ```
 
-
 ```{r AP por pais - partidos}
 API.pais <- cses5_ap5 %>% group_by(pais) %>% 
   summarise(m.WASP.part = mean(WASPS.part, na.rm = TRUE),
@@ -758,12 +751,12 @@ plot.API <- ggplot(API.pais, aes(x = reorder(pais, -m.WASP.part), y = m.WASP.par
 
 plot.API
 ```
+
 ```{r include=FALSE}
 library(showtext)
 font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
 showtext_auto()
 ```
-
 
 ```{r}
 
@@ -789,7 +782,6 @@ plot.API.leader <- ggplot(API.pais, aes(x = reorder(pais, -m.WASP.leader), y = m
 plot.API.leader
 
 ```
-
 
 ```{r}
 
@@ -834,6 +826,7 @@ plot.API.year.leader <- ggplot(API.year, aes(x = year_election, y = m.WASP.leade
 plot.API.year.leader
 
 ```
+
 ### Limitaciones del WASPS
 
 El problema principal es que no permite dilucidar los componentes intra-inter grupales de la polarización afectiva
@@ -842,12 +835,9 @@ El problema principal es que no permite dilucidar los componentes intra-inter gr
 
 Según Wagner (2020) existe otra medida de polarización afectiva que entiende como la distancia media ponderada del grupo de votantes o líder de partido con más agrado. Esta medida requiere identificación posiita con un grupo de votantes o un líder específico y captura cuanto un individuo, en promedio, le desagradan otros electores y otros líderes comparados con su propio grupo o líder. Para calcular la distancia media ponderada, la formula es la siguiente:
 
+$$WAPD_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - {Like}_{max i})^2}$$
 
-\[WAPD_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - {Like}_{max i})^2}\]
-
-donde \[{g}\] es el grupo ajeno (electores o líderes), \[{i}\] cada individuo \[{{Like}_{max i}}\] el valor agregado asignado al grupo con el que se identifica el individuo, es decir, el mayor agrado (10) y \[{{Like}_{ig}}\] el valor de agrado hacia a cada out-group \[{g}\]. Por último, \[{Vg}\] es el tamaño de cada partido. Esta medida puede ser:
-1. Los resultados de las elecciones más recientes.
-2. El promedio de intención de voto de cada partido.
+donde $${g}$$ es el grupo ajeno (electores o líderes), $${i}$$ cada individuo $${{Like}_{max i}}$$ el valor agregado asignado al grupo con el que se identifica el individuo, es decir, el mayor agrado (10) y $${{Like}_{ig}}$$ el valor de agrado hacia a cada out-group $${g}$$. Por último, $${Vg}$$ es el tamaño de cada partido. Esta medida puede ser: 1. Los resultados de las elecciones más recientes. 2. El promedio de intención de voto de cada partido.
 
 El índice está computado respectivamente para los electores de los diferentes países usando "termómetros de sentimiento" con una escala del 0 al 10, donde 0 significa "sentifimiento desfavorable" y 10 significa "sentimientos favorables". El índice está calculado solo para aquellos que declaran algún nivel de afecto por, al menos, dos partidos o líderes.
 
@@ -855,7 +845,7 @@ El índice está computado respectivamente para los electores de los diferentes 
 
 Esta variable va de menor a mayor agrado en una escala de 0 a 100
 
-\[Like_{ig} = {Like}_{max i}\]
+$$Like_{ig} = {Like}_{max i}$$
 
 ```{r include=FALSE}
 
@@ -902,7 +892,6 @@ summary(cses5_ap5$likedistleaderap)
 
 
 ```
-
 
 ```{r Plot mean distance like-dislike}
 
@@ -1010,9 +999,7 @@ plot.WASP.WASD.leader
 
 ```
 
-
-#Dependant variable: Party identification
-#IV: AP measures
+#Dependant variable: Party identification #IV: AP measures
 
 ```{r Partisanship, include=FALSE}
 #Partisanship 
@@ -1066,7 +1053,6 @@ min=min(WASPS.part,na.rm = TRUE))
 id_pp_desc
 ```
 
-
 ```{r include=FALSE}
 cses5_ap5 %>% filter(!is.na(id_pp_re)) %>% ggplot(aes(factor(id_pp_re),WASPS.part)) +
 geom_boxplot() +
@@ -1075,6 +1061,7 @@ x="Party identification") +
 theme_minimal()
 
 ```
+
 ```{r include=FALSE}
 
 hist(cses5_ap5$WASPS.part)
@@ -1087,9 +1074,8 @@ pm_id_pp <- lm(WASPS.part ~ id_pp_re, data = cses5_ap5)
 
 ```
 
-
-
 # Logistic regression - bivariate models
+
 ## Dependent variable: Party Identification
 
 ```{r include=FALSE}
@@ -1109,6 +1095,7 @@ library(jtools)
 plot_summs(m1,m2,m3,m4, coefs = c("Leaders Mean distance, weighted" = "likedistleaderap", "Leaders Spread-of-scores, weighted" = "WASPS.leader" , "Parties Mean distance, weighted" = "likedistap", "Parties Spread-of-scores, weighted" = "WASPS.part"), scale = T, robust = T) + theme(legend.position="none") 
 
 ```
+
 ```{r include=FALSE}
 library(margins)
 
@@ -1119,11 +1106,11 @@ summary(marg1)
 plot(marg1)
 ```
 
-
 ```{r include=FALSE}
 
 export_summs(m1,m2,m3,m4, coefs = c("Leaders Mean distance, weighted" = "likedistleaderap", "Leaders Spread-of-scores, weighted" = "WASPS.leader" , "Parties Mean distance, weighted" = "likedistap", "Parties Spread-of-scores, weighted" = "WASPS.part", "Constant" = "(Intercept)"), robust = "HC3")
 ```
+
 # Dependent variable: Affective Polarization
 
 ## IV: Party Identification
@@ -1181,7 +1168,6 @@ mean_sd_idpp <- left_join(long_means_idpp, long_sd_idpp,  by = "AP_measure")
 desc_idpp <- left_join(mean_sd_idpp, long_ci_idpp,  by = "AP_measure")
 ```
 
-
 ```{r}
 desc_idpp <- desc_idpp %>% mutate("Mean difference" = round(`Partisan (Mean)`-`No ID (Mean)`, digits = 3))
 
@@ -1204,14 +1190,13 @@ ap_m4 <- lm(likedistleaderap ~id_pp + relevel(factor(region), ref = "North Ameri
 stargazer(ap_m1,ap_m2, ap_m3, ap_m4, align = T, title = 'Results', type = "text", dep.var.labels = ap_measures_colnames, ci=TRUE, ci.level=0.90, covariate.labels = c("Party Identification", "Europe","Latin America", "Party Identification*Europe","Party Identification*Latin America" ))
 
 ```
+
 ```{r}
 
 plot_summs(ap_m1,ap_m2,ap_m3,ap_m4, coefs = c("Party Identification" = "id_pp", "Europe" = '`relevel(factor(region), ref = "North America")`Europe',  "Latin America" = '`relevel(factor(region), ref = "North America")`Latin America', "Party Identification*Europe" = 'id_pp:`relevel(factor(region), ref = "North America")`Europe', "Party Identification*Latin America" = 'id_pp:`relevel(factor(region), ref = "North America")`Latin America'),  model.names = ap_measures_colnames, scale = T, robust = T) + theme(legend.title = element_blank()) 
 
 
 ```
-
-
 
 ```{r Clustered standar errors, include=FALSE}
 #Clustered standar errors
@@ -1226,7 +1211,7 @@ tidy(fitted_m1_clustered, conf.int = T) %>% filter(term == "id_pp")
 summ(ap_m1, robust = "HC1")
 ```
 
-## Party identification + Fixed effects 
+## Party identification + Fixed effects
 
 ```{r eval=FALSE, include=FALSE}
 
@@ -1254,7 +1239,6 @@ stargazer(fixed.countries_idpp1,fixed.countries_idpp2,fixed.countries_idpp3,fixe
 
 
 ```
-
 
 ## IV: Satisfaction for democracy
 
@@ -1288,6 +1272,7 @@ geom_bar(aes(y=..prop..*100, group=1), width=0.5)+facet_wrap(~pais)+
   coord_cartesian(ylim=c(0, 80)) + theme_light()
 
 ```
+
 ```{r include=FALSE}
 
 pdem1 <- t.test(WASPS.part~sat_dem_re,data=cses5_ap5)
@@ -1320,8 +1305,6 @@ ap_satdem_m4 <- lm(likedistleaderap ~sat_dem_re + relevel(factor(region), ref = 
 stargazer(ap_satdem_m1,ap_satdem_m2, ap_satdem_m3, ap_satdem_m4, align = T, title = 'Results', type = "text", dep.var.labels = ap_measures_colnames, ci=TRUE, ci.level=0.90, covariate.labels = c("Satisfaction for democracy", "Europe","Latin America", "Satisfaction for democracy*Europe","Satisfaction for democracy*Latin America" ))
 
 ```
-
-
 
 ```{r}
 
@@ -1371,7 +1354,6 @@ cses5_ap6$con.elites <- ifelse(cses5_ap6$E3004_3 > 5, NA, 6-cses5_ap6$E3004_3)
 summary(cses5_ap6$con.elites)
 ```
 
-
 ```{r}
 #Elite are main problem
 
@@ -1387,7 +1369,6 @@ cor.test(cses5_ap6$likedistleaderap, cses5_ap6$problem.elites, method = "pearson
 
 ```
 
-
 ```{r}
 #Leaders Bend Rules
 
@@ -1395,7 +1376,6 @@ summary(cses5_ap6$E3004_5)
 cses5_ap6$antirule_leader <- ifelse(cses5_ap6$E3004_5 > 5, NA, 6-cses5_ap6$E3004_5)
 summary(cses5_ap6$antirule_leader)
 ```
-
 
 ```{r}
 #Corruption
@@ -1440,7 +1420,6 @@ summary(cses5_ap6$satis_dem)
 
 ```
 
-
 ```{r include=FALSE}
 library(corrplot)
 
@@ -1481,7 +1460,6 @@ pairs.panels(df_cor)
 
 ```
 
-
 ```{r Elites perceived as trustworthy, include=FALSE}
 
 cor.test(cses5_ap6$WASPS.leader, cses5_ap6$con.elites)
@@ -1490,7 +1468,6 @@ cor.test(~ WASPS.leader + con.elites, data = subset(cses5_ap6,region == "Latin A
 
 
 ```
-
 
 ```{r}
 
@@ -1512,8 +1489,6 @@ geom_point() +
 geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
 
 ```
-
-
 
 ```{r}
 
@@ -1540,7 +1515,6 @@ geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
 
 ```
 
-
 ```{r eval=FALSE, include=FALSE}
 library(Rmisc)
 
@@ -1552,7 +1526,6 @@ sum_scores <- summarySE(long_scores, measurevar =  "score",
 sum_scores
 ```
 
-
 ```{r eval=FALSE, include=FALSE}
 ggplot(cses5_ap6, aes(x=WASPS.part, y=con.elites))+
   geom_point()+
@@ -1562,7 +1535,6 @@ ggplot(cses5_ap6, aes(x=WASPS.part, y=con.elites))+
   theme_light()
 
 ```
-
 
 ```{r include=FALSE}
 
@@ -1585,7 +1557,6 @@ plot_summs(olm1,olm2,olm3,olm4, coefs = c("Leaders Mean distance, weighted" = "l
 
 ```
 
-
 ```{r eval=FALSE, include=FALSE}
 
 library(ggpubr)
@@ -1599,16 +1570,13 @@ annotate_figure(plots.WASP.WASD, top =  text_grob("Mean levels of affective pola
 
 ```
 
-
-
 ### Desagrado por partido/líder ajeno (Out-group)
 
 Mide la media ponderada del desagrado hacia partidos/líderes ajenos, es decir, aquellos grupos con los que no nos sentimos identificados
 
-\[OutDislike_{i} = {\sum_{g=1}^g (V_{g}* {Dislike}_{ig})}\]
+$$OutDislike_{i} = {\sum_{g=1}^g (V_{g}* {Dislike}_{ig})}$$
 
-donde \[{Dislike}_{ig}\] es el termometro de afecto invertido asignado a cada grupo ajeno \[{g}\]. Como las escalas estan revertidas, esta variable va de mayor a menor agrado
-
+donde $${Dislike}_{ig}$$ es el termometro de afecto invertido asignado a cada grupo ajeno $${g}$$. Como las escalas estan revertidas, esta variable va de mayor a menor agrado
 
 ```{r eval=FALSE, include=FALSE}
 cses5_ap6 <- cses5_ap5
@@ -1685,7 +1653,6 @@ cses5_ap_nom$equal.max.part <- if_else(cses5_ap_nom$max.like.variable == cses5_a
 table(cses5_ap_nom$equal.max.part)
 
 ```
-
 
 ```{r eval=FALSE, include=FALSE}
 cses5_ap5$maxlikeleader <- apply(like.leader, 1, max, na.rm = T)
