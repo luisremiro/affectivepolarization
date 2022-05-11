@@ -1,0 +1,1699 @@
+---
+title: "Common dissent: Affective polarization in Latin America"
+author: "Luis Remiro"
+date: '2022'
+output:
+  html_document:
+    keep_md: true
+    pdf_document:
+      fig_caption: yes
+      number_sections: yes
+  pdf_document: default
+  word_document: default
+subtitle: REPENFAS
+header-includes:
+- \usepackage[catalan]{babel}
+- \usepackage{booktabs}
+fontsize: 12pt
+fontfamily: mathpazo
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval=TRUE, include = TRUE, warning=FALSE, message = FALSE)
+options(tinytex.verbose = TRUE)
+```
+
+
+```{r include=FALSE}
+
+rm(list = ls())
+
+library(tidyverse)
+library(haven)
+library(ggplot2)
+library(gtable)
+library(grid)
+library(foreign)
+library(Hmisc)
+library(readxl)
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(gridExtra)
+
+if(!require(Hmisc)){
+  install.packages("Hmisc", dependencies = TRUE)
+  library(Hmisc)
+}
+
+
+if(!require(modelsummary)){
+  install.packages("modelsummary", dependencies = TRUE)
+  library(modelsummary)
+}
+
+if(!require(estimatr)){
+  install.packages("estimatr", dependencies = TRUE)
+  library(estimatr)
+}
+
+if(!require(rdrobust)){
+  install.packages("rdrobust")
+  library(rdrobust)
+}
+
+if(!require(naniar)){
+  install.packages("naniar", dependencies = TRUE)
+  library(naniar)
+}
+
+if(!require(DataEditR)){
+  install.packages("DataEditR", dependencies = TRUE)
+  library(DataEditR)
+}
+
+if(!require(cli)){
+  install.packages("cli", dependencies = TRUE)
+  library(cli)
+}
+
+if(!require(devtools)){
+  install.packages("devtools", dependencies = TRUE)
+  library(devtools)
+}
+
+if(!require(jtools)){
+  install.packages("jtools", dependencies = TRUE)
+  library(devtools)
+}
+
+
+#devtools::install_github("DillonHammill/rhandsontable")
+```
+
+
+# Polarización afectiva - Método Wagner
+
+```{r include=FALSE}
+
+df <- read_csv("data/cses_imd.csv")
+
+
+# Nombre de pais >>> IMD1006_NAM
+#Edad por categorias  IMD2001_2 
+#   IMD2002      >>>         GENDER
+#    IMD2003      >>>         EDUCATION
+#    IMD2004      >>>         MARITAL STATUS
+#    IMD2005      >>>         RELIGIOUS DENOMINATION 
+#    IMD2006      >>>         HOUSEHOLD INCOME
+#    IMD2007      >>>         RURAL OR URBAN RESIDENCE
+
+# IMD3005_1    >>>         PARTY IDENTIFICATION: ARE YOU CLOSE TO ANY POLITICAL PARTY
+#    IMD3005_2    >>>         PARTY IDENTIFICATION: DO YOU FEEL CLOSER TO ONE PARTY
+#    IMD3005_3    >>>         PARTY IDENTIFICATION: WHO
+#    IMD3005_4    >>>         PARTY IDENTIFICATION: HOW CLOSE
+
+#IMD3006      >>>         LEFT-RIGHT - SELF 
+#    IMD3007_A    >>>         LEFT-RIGHT - PARTY A
+#    IMD3007_B    >>>         LEFT-RIGHT - PARTY B
+# IMD3007_C    >>>         LEFT-RIGHT - PARTY C
+# IMD3007_D    >>>         LEFT-RIGHT - PARTY D
+#    IMD3007_E    >>>         LEFT-RIGHT - PARTY E
+#    IMD3007_F    >>>         LEFT-RIGHT - PARTY F
+
+#IMD3008_A    >>>         LIKE-DISLIKE - PARTY A
+#    IMD3008_B    >>>         LIKE-DISLIKE - PARTY B
+#    IMD3008_C    >>>         LIKE-DISLIKE - PARTY C
+#    IMD3008_D    >>>         LIKE-DISLIKE - PARTY D
+#    IMD3008_E    >>>         LIKE-DISLIKE - PARTY E
+#    IMD3008_F    >>>         LIKE-DISLIKE - PARTY F
+# IMD3010      >>>         SATISFACTION WITH DEMOCRACY
+
+#IMD5012_A    >>>         LEFT-RIGHT - PARTY A
+#    IMD5012_B    >>>         LEFT-RIGHT - PARTY B
+#    IMD5012_C    >>>         LEFT-RIGHT - PARTY C
+#    IMD5012_D    >>>         LEFT-RIGHT - PARTY D
+#    IMD5012_E    >>>         LEFT-RIGHT - PARTY E
+#    IMD5012_F    >>>         LEFT-RIGHT - PARTY F
+
+# IMD5000_A    >>>         PARTY A IDENTIFIER - NUMERICAL
+#  IMD5000_B    >>>         PARTY B IDENTIFIER - NUMERICAL
+
+# IMD5001_A    >>>         PERCENT VOTE - LOWER HOUSE - PARTY A
+#    IMD5001_B    >>>         PERCENT VOTE - LOWER HOUSE - PARTY B
+# IMD3010 >>> SATISFACTION WITH DEMOCRACY
+# IMD5050_1 >>> Freedom House rating A rating of 1 indicates the highest degree of freedom and 7 the least amount of freedom
+# IMD5051_1 >>> DEMOCRACY-AUTOCRACY - POLITY IV RATING the resulting scale ranges from +10 (strongly democratic) to -10 (strongly autocratic).
+# IMD5048 >>> REGIME: TYPE OF EXECUTIVE type of executive: 0 Dictatorship, 1 Parliamentary Democracy, 2 Mixed Democracy, 3 Presidential Democracy).
+
+head(df)[c(118:126)]
+
+
+
+```
+
+
+```{r include=FALSE}
+#CSES 1-4 dataframe
+
+table(df$IMD1008_MOD_1)
+class(df$IMD1008_MOD_1)
+
+df$mod <- NA
+df$mod[df$IMD1008_MOD_1 == 1] <- "mod1"
+df$mod[df$IMD1008_MOD_2 == 1] <- "mod2"
+df$mod[df$IMD1008_MOD_3 == 1] <- "mod3"
+df$mod[df$IMD1008_MOD_4 == 1] <- "mod4"
+
+pol.af <- df %>% select(IMD1005, mod, IMD1004, IMD1006_NAM,IMD1008_YEAR, IMD1009, IMD1015, IMD1013_M, IMD1013_D, IMD1013_Y,IMD2001_1,IMD2002, IMD2003, IMD2005, IMD2006, IMD3005_1, IMD3005_2, IMD3005_3, IMD3005_4, IMD3006, IMD3008_A,IMD3008_B,IMD3008_C, IMD3008_D, IMD3008_E, IMD3008_F, IMD3008_G, IMD3008_H, IMD3008_I,IMD3009_A,IMD3009_B,IMD3009_C, IMD3009_D, IMD3009_E, IMD3009_F, IMD3009_G, IMD3009_H, IMD3009_I,IMD3010, IMD3014,  IMD5001_A, IMD5001_B, IMD5001_C, IMD5001_D, IMD5001_E, IMD5001_F, IMD5001_G,IMD5001_H, IMD5001_I, IMD5005_A, IMD5005_B, IMD5005_C, IMD5005_D, IMD5005_E, IMD5005_F, IMD5005_G,IMD5005_H, IMD5005_I, starts_with("IMD5000"))
+
+pol.af <- na.omit(pol.af)
+
+
+```
+
+
+```{r include=FALSE}
+#CSES round 5
+
+#E3004_3 = Elite Trustworthy,
+#E3004_4 = Elite are main problem,
+#E3004_5 = Leaders Bend Rules, 
+#E3007 = Widesspread Corruption on elites
+#E3023 = Satisfaction with democracy
+#E3009 = Goverment performance
+#E5102 = Corruption according to Transparency international
+#E5092 = Gini index
+#E5091_1 = Democracy - Autocracy Polity IV
+#E5090_1 = Freedom House rating of freedom in a country
+#E5051 = Type of regime. 0 = Dictatorship, 1 Parliamentary Democracy, 2 Mixed Democracy, 3 Presidential Democracy
+
+cses5 <- read_csv("data/cses5.csv") %>% select(E1005,E1004, E1006_NAM,E1008, E1015, E1022, E1032,E1033,E1034,E2001_Y, E2002, E2003, E2013, E2010, E3024_1, E3024_2, E3024_3, E3024_4, E3020, E3017_A,E3017_B,E3017_C, E3017_D, E3017_E, E3017_F, E3017_G, E3017_H, E3017_I,E3018_A,E3018_B,E3018_C, E3018_D, E3018_E, E3018_F, E3018_G, E3018_H, E3018_I, E3023, E3009, E5001_A, E5001_B, E5001_C, E5001_D, E5001_E, E5001_F, E5001_G,E5001_H, E5001_I, E5005_A, E5005_B, E5005_C, E5005_D, E5005_E, E5005_F, E5005_G,E5005_H, E5005_I, starts_with("E5000"))
+```
+
+
+```{r include=FALSE}
+
+cses5$mod <- "mod5"
+
+#Method for turning missing values in NA's
+
+na_strings <- c(9999,999997, 999998, 999999, 9997, 9998, 999, 996, 997)
+
+cses5 <- cses5 %>% replace_with_na_all(condition = ~.x %in% na_strings)
+
+cses5 <- cses5 %>% replace_with_na(replace = list(E2010 = 9))
+cses5 <- cses5 %>% replace_with_na(replace = list(E3017_A = c(97,98,99),
+                                                  E3017_B = c(97,98,99),
+                                                    E3017_C = c(97,98,99), 
+                                                    E3017_D = c(97,98,99), 
+                                                    E3017_E = c(97,98,99), 
+                                                    E3017_F = c(97,98,99), 
+                                                    E3017_G = c(97,98,99), 
+                                                    E3017_H = c(97,98,99), 
+                                                    E3017_I = c(97,98,99),
+                                                    E3018_A = c(97,98,99),
+                                                    E3018_B = c(97,98,99),
+                                                    E3018_C = c(97,98,99), 
+                                                    E3018_D = c(97,98,99), 
+                                                    E3018_E = c(97,98,99), 
+                                                    E3018_F = c(97,98,99), 
+                                                    E3018_G = c(97,98,99), 
+                                                    E3018_H = c(97,98,99), 
+                                                    E3018_I = c(97,98,99),
+                                                  E2003 = c(97,98,99)))
+
+```
+
+
+
+```{r include=FALSE}
+#Tengo que cambiar el nombre de las variables para poder unir ambas bases de datos
+
+cses5$E2001_Y <- ifelse(cses5$E2001_Y > 9000, NA,cses5$E2001_Y)
+
+cses5$edad <- cses5$E1034 - cses5$E2001_Y
+
+summary(cses5$edad)
+
+cses5$E2001_Y <- NULL
+
+pol.af <- pol.af %>% rename(
+  E1005 = IMD1005,
+  E1004 = IMD1004, 
+  E1006_NAM = IMD1006_NAM,
+  E1008 = IMD1008_YEAR, 
+  E1015 = IMD1009,
+  E1022 = IMD1015,
+  E1032 = IMD1013_M,
+  E1033 = IMD1013_D,
+  E1034 = IMD1013_Y,
+  edad = IMD2001_1, 
+  E2002 = IMD2002, 
+  E2003 =  IMD2003, 
+  E2013 = IMD2005, 
+  E2010 = IMD2006,
+  E3024_1 = IMD3005_1, 
+  E3024_2 = IMD3005_2,
+  E3024_3 = IMD3005_3,
+  E3024_4 = IMD3005_4,
+  E3020 = IMD3006,
+  E3017_A = IMD3008_A,
+  E3017_B = IMD3008_B,
+  E3017_C = IMD3008_C,
+  E3017_D = IMD3008_D,
+  E3017_E = IMD3008_E,
+  E3017_F = IMD3008_F,
+  E3017_G = IMD3008_G,
+  E3017_H = IMD3008_H,
+  E3017_I = IMD3008_I,
+  E3018_A = IMD3009_A,
+  E3018_B = IMD3009_B,
+  E3018_C = IMD3009_C,
+  E3018_D = IMD3009_D,
+  E3018_E = IMD3009_E,
+  E3018_F = IMD3009_F,
+  E3018_G = IMD3009_G,
+  E3018_H = IMD3009_H,
+  E3018_I = IMD3009_I,
+  E3023 = IMD3010,
+  E3009 = IMD3014,
+  E5001_A = IMD5001_A,
+  E5001_B = IMD5001_B,
+  E5001_C = IMD5001_C,
+  E5001_D = IMD5001_D,
+  E5001_E = IMD5001_E,
+  E5001_F = IMD5001_F,
+  E5001_G = IMD5001_G,
+  E5001_H = IMD5001_H,
+  E5001_I = IMD5001_I, 
+  E5005_A = IMD5005_A,
+  E5005_B = IMD5005_B,
+  E5005_C = IMD5005_C,
+  E5005_D = IMD5005_D,
+  E5005_E = IMD5005_E,
+  E5005_F = IMD5005_F,
+  E5005_G = IMD5005_G,
+  E5005_H = IMD5005_H,
+  E5005_I = IMD5005_I,
+  E5000_A = IMD5000_A,
+  E5000_B = IMD5000_B,
+  E5000_C = IMD5000_C,
+  E5000_D = IMD5000_D,
+  E5000_E = IMD5000_E,
+  E5000_F = IMD5000_F,
+  E5000_G = IMD5000_G,
+  E5000_H = IMD5000_H,
+  E5000_I = IMD5000_I)
+
+summary(cses5)
+
+names(cses5)
+names(pol.af)
+
+cses5_1 <- cses5 %>% select(!starts_with("E5000_L"))
+
+#Unifico las bases de datos: La unificada con la ultima ronda  
+
+cses5_ap <- rbind(pol.af, cses5_1)
+
+```
+
+```{r include=FALSE}
+
+cses5_ap2 <- cses5_ap  %>% 
+  rename(
+    pais = E1006_NAM,
+  day_survey = E1032,
+  month_survey = E1033,
+  year_survey = E1034,
+  year_election = E1008,
+  sexo = E2002,
+  educacion = E2003,
+  religion = E2013,
+  renta.quint = E2010)
+
+label(cses5_ap2$E3009) <- "PERFORMANCE OF THE GOVERMENT"
+label(cses5_ap2$E3023) <- "SATISFIED WITH THE WAY DEMOCRACY WORKS"
+label(cses5_ap2$E1022) <- "TIMING OF STUDY RELATIVE TO ELECTION"
+label(cses5_ap2$E1015) <- "TYPE OF ELECTION"
+label(cses5_ap2$E3024_1) <- "PARTY IDENTIFICATION: ARE YOU CLOSE TO ANY POLITICAL PARTY"
+label(cses5_ap2$E3024_2) <- "PARTY IDENTIFICATION: DO YOU FEEL CLOSER TO ONE PARTY"
+label(cses5_ap2$E3024_3) <- "PARTY IDENTIFICATION: WHO"
+label(cses5_ap2$E3024_4) <- "PARTY IDENTIFICATION: HOW CLOSE"
+label(cses5_ap2$E3020) <- "LEFT-RIGHT - SELF"
+label(cses5_ap2$E3017_A) <- "LIKE-DISLIKE - PARTY A"
+label(cses5_ap2$E3017_B)<- "LIKE-DISLIKE - PARTY B"
+label(cses5_ap2$E3017_C) <- "LIKE-DISLIKE - PARTY C"
+label(cses5_ap2$E3017_D) <- "LIKE-DISLIKE - PARTY D"
+label(cses5_ap2$E3017_E) <- "LIKE-DISLIKE - PARTY E"
+label(cses5_ap2$E3017_F) <- "LIKE-DISLIKE - PARTY F"
+label(cses5_ap2$E3017_G) <- "LIKE-DISLIKE - PARTY G"
+label(cses5_ap2$E3017_H) <- "LIKE-DISLIKE - PARTY H"
+label(cses5_ap2$E3017_I) <- "LIKE-DISLIKE - PARTY I"
+label(cses5_ap2$E3018_A) <- "LIKE-DISLIKE - LEADER A"
+label(cses5_ap2$E3018_B)<- "LIKE-DISLIKE - LEADER B"
+label(cses5_ap2$E3018_C) <- "LIKE-DISLIKE - LEADER C"
+label(cses5_ap2$E3018_D) <- "LIKE-DISLIKE - LEADER D"
+label(cses5_ap2$E3018_E) <- "LIKE-DISLIKE - LEADER E"
+label(cses5_ap2$E3018_F) <- "LIKE-DISLIKE - LEADER F"
+label(cses5_ap2$E3018_G) <- "LIKE-DISLIKE - LEADER G"
+label(cses5_ap2$E3018_H) <- "LIKE-DISLIKE - LEADER H"
+label(cses5_ap2$E3018_I) <- "LIKE-DISLIKE - LEADER I"
+label(cses5_ap2$E5001_A) <- "PERCENT VOTE - LOWER HOUSE - PARTY A"
+label(cses5_ap2$E5001_B)<- "PERCENT VOTE - LOWER HOUSE - PARTY B"
+label(cses5_ap2$E5001_C) <- "PERCENT VOTE - LOWER HOUSE - PARTY C"
+label(cses5_ap2$E5001_D) <- "PERCENT VOTE - LOWER HOUSE - PARTY D"
+label(cses5_ap2$E5001_E) <- "PERCENT VOTE - LOWER HOUSE - PARTY E"
+label(cses5_ap2$E5001_F) <- "PERCENT VOTE - LOWER HOUSE - PARTY F"
+label(cses5_ap2$E5001_G) <- "PERCENT VOTE - LOWER HOUSE - PARTY G"
+label(cses5_ap2$E5001_H) <- "PERCENT VOTE - LOWER HOUSE - PARTY H"
+label(cses5_ap2$E5001_I) <- "PERCENT VOTE - LOWER HOUSE - PARTY I"
+label(cses5_ap2$E5005_A) <- "PERCENT VOTE - PRESIDENT - PARTY A"
+label(cses5_ap2$E5005_B)<- "PERCENT VOTE - PRESIDENT - PARTY B"
+label(cses5_ap2$E5005_C) <- "PERCENT VOTE - PRESIDENT - PARTY C"
+label(cses5_ap2$E5005_D) <- "PERCENT VOTE - PRESIDENT - PARTY D"
+label(cses5_ap2$E5005_E) <- "PERCENT VOTE - PRESIDENT - PARTY E"
+label(cses5_ap2$E5005_F) <- "PERCENT VOTE - PRESIDENT - PARTY F"
+label(cses5_ap2$E5005_G) <- "PERCENT VOTE - PRESIDENT - PARTY G"
+label(cses5_ap2$E5005_H) <- "PERCENT VOTE - PRESIDENT - PARTY H"
+label(cses5_ap2$E5005_I) <- "PERCENT VOTE - PRESIDENT - PARTY I"
+
+```
+
+## WASPS Spread of weighted like-dislike for voters/leaders
+
+It captures the likeability distributed among various parties and leaders in a multi-party system. This index recognizes that individuals may not have a strong partisan identification and, therefore, takes into account all individuals who express liking or disliking of parties and leaders. In addition, this index better captures opposition between groups of party members/leaders than between groups of individual voters or leaders. The formula is as follows:
+
+\[WAP_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - \overline{Like}_{i})^2}\]
+
+where \[{g}\] is the in-group, \[{i}\] the individual, \[\[\overline{Like}_{i}\] is the average like and dislike of the individual \[{i}\] and \[V_{g}\] is the size of each party, measured as a ratio in a range from 0 to 1. The average liking should also be weighted by the size of each party and its computation is as follows:
+
+\[\overline{Like}_{i} = \sum_{g=1}^g(V_{g} * Like_{ig})\]
+
+### Efecto medio ponderado
+
+Therefore, the first thing we need to calculate the distribution of likes and dislikes for each party is the distribution of votes for each party in the last election.
+
+
+```{r include=FALSE}
+
+summary(cses5_ap2$E5001_A)
+table(cses5_ap2$E5001_A)
+
+#Porcentaje de Voto al congreso
+
+cses5_ap2 <- cses5_ap2 %>% mutate(
+  PerVotParlA = ifelse(E5001_A >= 997, NA,E5001_A),
+  PerVotParlB = ifelse(E5001_B >= 997, NA,E5001_B),
+  PerVotParlC = ifelse(E5001_C >= 997, NA,E5001_C),
+  PerVotParlD = ifelse(E5001_D >= 997, NA,E5001_D),
+  PerVotParlE = ifelse(E5001_E >= 997, NA,E5001_E),
+  PerVotParlF = ifelse(E5001_F >= 997, NA,E5001_F),
+  PerVotParlG = ifelse(E5001_G >= 997, NA,E5001_G),
+  PerVotParlH = ifelse(E5001_H >= 997, NA,E5001_H),
+  PerVotParlI = ifelse(E5001_I >= 997, NA,E5001_I)
+)
+
+summary(cses5_ap2$PerVotParlA)
+
+#Porcentaje de Voto en las presidenciales
+
+cses5_ap2 <- cses5_ap2 %>% mutate(
+  PerVotPresA = ifelse(E5005_A >= 996, NA,E5005_A),
+  PerVotPresB = ifelse(E5005_B >= 996, NA,E5005_B),
+  PerVotPresC = ifelse(E5005_C >= 996, NA,E5005_C),
+  PerVotPresD = ifelse(E5005_D >= 996, NA,E5005_D),
+  PerVotPresE = ifelse(E5005_E >= 996, NA,E5005_E),
+  PerVotPresF = ifelse(E5005_F >= 996, NA,E5005_F),
+  PerVotPresG = ifelse(E5005_G >= 996, NA,E5005_G),
+  PerVotPresH = ifelse(E5005_H >= 996, NA,E5005_H),
+  PerVotPresI = ifelse(E5005_I >= 996, NA,E5005_I)
+)
+
+summary(cses5_ap2$PerVotPresA)
+
+```
+
+```{r include=FALSE}
+
+class(cses5_ap2$pais)
+
+table(cses5_ap2$pais)
+
+
+cses5_ap3 <- cses5_ap2 %>%  filter(pais %in% c("Spain", "France", "Portugal", "Italy", "Brazil", "Greece", "Chile", "Uruguay", "Mexico","Peru","Costa Rica", "United States of America", "Canada", "Argentina")) %>% rowwise() %>% mutate(
+  total.share.parl = sum(c_across(PerVotParlA:PerVotParlI), na.rm = TRUE),
+  coalicion = if_else(total.share.parl > 100, 1, 0),
+  presidencial = if_else(total.share.parl == 0, 1, 0))
+
+#Para las elecciones de Mexico-2006, fueron en coalicion, por lo que tengo que hacer un calculo diferente de la distribucion total de votos
+
+df_coalicion <- cses5_ap3 %>% filter(coalicion == 1)
+
+df_coalicion$pais <- as.factor(df_coalicion$pais)
+
+levels(df_coalicion$pais)
+
+df_coalicion <- df_coalicion %>% mutate(total.share.parl = sum(c(PerVotParlA, PerVotParlB, PerVotParlC, PerVotParlG, PerVotParlH, PerVotParlI), na.rm = TRUE))
+
+df_coalicion$total.share.parl[1]
+
+cses5_ap3$total.share.parl[cses5_ap3$total.share.parl == 183.37] <- 97.18
+
+summary(cses5_ap3$total.share.parl)
+
+```
+
+```{r}
+
+df_pres <- cses5_ap3 %>% filter(presidencial == 1)
+
+df_pres$pais <- as.factor(df_pres$pais)
+
+levels(df_pres$pais)
+
+table(df_pres$year_election)
+
+rm(df_pres)
+
+cses5_ap3 <- cses5_ap3 %>% rowwise() %>% mutate(
+  total.share.pres = sum(c_across(PerVotPresA:PerVotPresI), na.rm = TRUE))
+
+#Sumo los votos de las coaliciones presidenciales para determinar la distribucion real de votos totales.
+
+46.91+32.61
+
+cses5_ap3$total.share.pres[cses5_ap3$total.share.pres == 332.38] <- 79.52
+
+35.89+35.33+22.33+0.96+2.71
+
+cses5_ap3$total.share.pres[cses5_ap3$total.share.pres == 190.01] <- 97.22
+
+```
+Segun Wagner el tamaño de cada partido esta medido en un rango de 0 a 1, por tanto será necesario dividir los porcentajes de voto entre 100
+
+```{r Vote share, include=FALSE}
+
+#Proporcion de votos al parlamento
+
+cses5_ap3 <- cses5_ap3 %>% mutate(
+    VotParlA = PerVotParlA/100,
+  VotParlB = PerVotParlB/100,
+  VotParlC = PerVotParlC/100,
+  VotParlD = PerVotParlD/100,
+  VotParlE = PerVotParlE/100,
+  VotParlF = PerVotParlF/100,
+  VotParlG = PerVotParlG/100,
+  VotParlH = PerVotParlH/100,
+  VotParlI = PerVotParlI/100,
+  Nor.VotParlA = PerVotParlA/total.share.parl,
+  Nor.VotParlB = PerVotParlB/total.share.parl,
+  Nor.VotParlC = PerVotParlC/total.share.parl,
+  Nor.VotParlD = PerVotParlD/total.share.parl,
+  Nor.VotParlE = PerVotParlE/total.share.parl,
+  Nor.VotParlF = PerVotParlF/total.share.parl,
+  Nor.VotParlG = PerVotParlG/total.share.parl,
+  Nor.VotParlH = PerVotParlH/total.share.parl,
+  Nor.VotParlI = PerVotParlI/total.share.parl
+)
+
+
+
+#Proporcion de votos a la presidencia
+
+cses5_ap3 <- cses5_ap3 %>% mutate(
+    VotPresA = PerVotPresA/100,
+  VotPresB = PerVotPresB/100,
+  VotPresC = PerVotPresC/100,
+  VotPresD = PerVotPresD/100,
+  VotPresE = PerVotPresE/100,
+  VotPresF = PerVotPresF/100,
+  VotPresG = PerVotPresG/100,
+  VotPresH = PerVotPresH/100,
+  VotPresI = PerVotPresI/100, 
+  Nor.VotPresA = PerVotPresA/total.share.pres,
+  Nor.VotPresB = PerVotPresB/total.share.pres,
+  Nor.VotPresC = PerVotPresC/total.share.pres,
+  Nor.VotPresD = PerVotPresD/total.share.pres,
+  Nor.VotPresE = PerVotPresE/total.share.pres,
+  Nor.VotPresF = PerVotPresF/total.share.pres,
+  Nor.VotPresG = PerVotPresG/total.share.pres,
+  Nor.VotPresH = PerVotPresH/total.share.pres,
+  Nor.VotPresI = PerVotPresI/total.share.pres
+)
+
+#En vista de que habia una variabilidad de los porcentajes de voto total por la existencia de pequeños partidos extra-parlamentarios, he normalizado los porcentajes diviendo el porcentaje de votos de cada partido por el porcentaje total de votos en cada elección 
+
+
+```
+
+Recodifico los valores superiores como a 96 (NS/NC) como missing values
+
+```{r Like-dislike, include=FALSE}
+
+#Agrado
+
+##Agrado a partidos
+
+cses5_ap3 <- cses5_ap3 %>% mutate(
+  LikePartA = ifelse(E3017_A >= 96, NA,E3017_A),
+  LikePartB = ifelse(E3017_B >= 96, NA,E3017_B),
+  LikePartC = ifelse(E3017_C >= 96, NA,E3017_C),
+  LikePartD = ifelse(E3017_D >= 96, NA,E3017_D),
+  LikePartE = ifelse(E3017_E >= 96, NA,E3017_E),
+  LikePartF = ifelse(E3017_F >= 96, NA,E3017_F),
+  LikePartG = ifelse(E3017_G >= 96, NA,E3017_G),
+  LikePartH = ifelse(E3017_H >= 96, NA,E3017_H),
+  LikePartI = ifelse(E3017_I >= 96, NA,E3017_I)
+)
+
+summary(cses5_ap3$LikePartA)
+
+#Agrado a lideres
+
+cses5_ap3 <- cses5_ap3 %>% mutate(
+  LikeLeaderA = ifelse(E3018_A >= 96, NA,E3018_A),
+  LikeLeaderB = ifelse(E3018_B >= 96, NA,E3018_B),
+  LikeLeaderC = ifelse(E3018_C >= 96, NA,E3018_C),
+  LikeLeaderD = ifelse(E3018_D >= 96, NA,E3018_D),
+  LikeLeaderE = ifelse(E3018_E >= 96, NA,E3018_E),
+  LikeLeaderF = ifelse(E3018_F >= 96, NA,E3018_F),
+  LikeLeaderG = ifelse(E3018_G >= 96, NA,E3018_G),
+  LikeLeaderH = ifelse(E3018_H >= 96, NA,E3018_H),
+  LikeLeaderI = ifelse(E3018_I >= 96, NA,E3018_I)
+)
+
+summary(cses5_ap3$LikeLeaderA)
+
+```
+
+
+```{r VotosxPartido, include=FALSE}
+
+cses5_ap3 <- cses5_ap3 %>% mutate(
+  Nor.VotA = ifelse(presidencial == 1, Nor.VotPresA, Nor.VotParlA),
+  Nor.VotB = ifelse(presidencial == 1, Nor.VotPresB, Nor.VotParlB),
+Nor.VotC = ifelse(presidencial == 1, Nor.VotPresC, Nor.VotParlC),
+Nor.VotD = ifelse(presidencial == 1, Nor.VotPresD, Nor.VotParlD),
+Nor.VotE = ifelse(presidencial == 1, Nor.VotPresE, Nor.VotParlE),
+Nor.VotF = ifelse(presidencial == 1, Nor.VotPresF, Nor.VotParlF),
+Nor.VotG = ifelse(presidencial == 1, Nor.VotPresG, Nor.VotParlG),
+Nor.VotH = ifelse(presidencial == 1, Nor.VotPresH, Nor.VotParlH),
+Nor.VotI = ifelse(presidencial == 1, Nor.VotPresI, Nor.VotParlI),
+  presidencial_recod = ifelse(total.share.pres != 0, 1,0),
+  legis = ifelse(total.share.parl != 0, 1,0),
+  sim_elec = ifelse(sum(presidencial_recod,legis) == 2, 1,0),
+  )
+
+table(cses5_ap3$pais, cses5_ap3$year_election, cses5_ap3$sim_elec)
+
+```
+En la base de datos hay varios paises que celebraron elecciones simultaneas (presidenciales + parlamentarias). Siguiendo el método de Reiljan (2020) para estos casos, tomaré en cuenta las cuotas de voto que haya recibido cada partido en las elecciones parlamentarias. De esta manera /al menos teoricamente- podriamos capturar todas las preferencias debido a que se presentan más partido. Además no corremos el riesgo de sobre estimar la polarización, en tanto, para unas elecciones presidenciales generalmente solo se presentan candidatos de los partidos mayoritarios o candidaturas que aglomeran preferencias de varios partidos. Sin embargo, las cuotas de voto en elecciones presidenciales se tomar'an en cuenta cuando no se tenga disponible datos para elecciones parlamentarias: Chile	1999, Francia	2002, Francia	2012, Francia	2017 y Estados Unidos	2016 debido a que no hay datos de elecciones parlamentariasdisponibles.
+
+
+Una vez depurada la distribución de los votos para cada partido, pasaremos a calcular la media de agrado y desagrado ponderada para cada individuo \[{i}\] sobre cada partido \[{g}\]  
+
+```{r Like ponderado, include=FALSE}
+
+#He calculado medidas de agrado:
+  # 1) El agrado del partido por el tamaño del partido según su cuota de votos en las últimas elecciones
+  # 2) El agrado por el lider del partido por el tamaño del partido según su cuota votos en las últimas elecciones
+
+
+
+cses5_ap3 <- cses5_ap3  %>% rowwise() %>% mutate(
+  sum.like = sum(LikePartA*Nor.VotA, LikePartB*Nor.VotB, 
+                  LikePartC*Nor.VotC, LikePartD*Nor.VotD,
+                  LikePartE*Nor.VotE, LikePartF*Nor.VotF,
+                  LikePartG*Nor.VotG, LikePartH*Nor.VotH,
+                  LikePartI*Nor.VotI, na.rm = TRUE),
+  sum.like.leader = sum(LikeLeaderA*Nor.VotA, LikeLeaderB*Nor.VotB, 
+                  LikeLeaderC*Nor.VotC, LikeLeaderD*Nor.VotD,
+                  LikeLeaderE*Nor.VotE, LikeLeaderF*Nor.VotF,
+                  LikeLeaderG*Nor.VotG, LikeLeaderH*Nor.VotH,
+                  LikeLeaderI*Nor.VotI, na.rm = TRUE))
+
+```
+Las observaciones de Mexico en el 2006, al ser una coalición, me generan problemas en el data frame. Por ahora, las excluiré del estudio.
+
+```{r, include=FALSE}
+
+cses5_ap4 <- cses5_ap3[cses5_ap3$coalicion == 0,]
+
+```
+
+Como mínimo, cada observación ha de tener al menos una expresión de agrada-desagrado por dos partidos/líderes para que puedan ser incluidos en el índice. 
+
+```{r include=FALSE}
+
+namesvar<-names(cses5_ap3)
+
+var_part<-which(grepl("^LikePart",namesvar))
+var_part2 <- namesvar[var_part]
+
+cses5_ap4$na <- apply(is.na(cses5_ap4[,var_part2]), 1, sum)
+
+```
+
+Sin embargo, esta condición aplica para el caso de los partidos y no de los líderes. Existen observaciones en las que no hay respuesta de agrado-desagrado para partidos, pero si para los líderes.
+
+```{r, include=FALSE}
+
+var_lider <-which(grepl("^LikeLeader",namesvar))
+var_lider2 <- namesvar[var_lider]
+
+cses5_ap4$na_leader <- apply(is.na(cses5_ap4[,var_lider2]), 1, sum)
+
+```
+
+Descartaré todos aquellos que no cumplan estan condición.
+
+```{r include=FALSE}
+
+cses5_ap5 <- cses5_ap4 %>% filter(!na >= 8,
+                                  !na_leader >= 8)
+
+#Para el MODULO 2 no se incluyo la pregunta sobre el agrado a lideres
+
+```
+Ya podemos calcular la distribución ponderada de puntuaciones de agrado-desagrado hacia votantes y líderes
+
+```{r}
+
+
+cses5_ap5 <- cses5_ap5 %>% mutate(
+  WASPS.part = sqrt(sum(Nor.VotA*(LikePartA-sum.like)^2, Nor.VotB*(LikePartB-sum.like)^2, 
+                  Nor.VotC*(LikePartC-sum.like)^2, Nor.VotD*(LikePartD-sum.like)^2,
+                  Nor.VotE*(LikePartE-sum.like)^2, Nor.VotF*(LikePartF-sum.like)^2,
+                  Nor.VotG*(LikePartG-sum.like)^2, Nor.VotH*(LikePartH-sum.like)^2,
+                  Nor.VotI*(LikePartI-sum.like)^2, na.rm = TRUE)),
+  WASPS.leader = sqrt(sum(Nor.VotA*(LikeLeaderA-sum.like.leader)^2, Nor.VotB*(LikeLeaderB-sum.like.leader)^2, 
+                  Nor.VotC*(LikeLeaderC-sum.like.leader)^2, Nor.VotD*(LikeLeaderD-sum.like.leader)^2,
+                  Nor.VotE*(LikeLeaderE-sum.like.leader)^2, Nor.VotF*(LikeLeaderF-sum.like.leader)^2,
+                  Nor.VotG*(LikeLeaderG-sum.like.leader)^2, Nor.VotH*(LikeLeaderH-sum.like.leader)^2,
+                  Nor.VotI*(LikeLeaderI-sum.like.leader)^2, na.rm = TRUE)))
+
+summary(cses5_ap5$WASPS.part)
+
+summary(cses5_ap5$WASPS.leader)
+
+hist.part  <-cses5_ap5 %>%  ggplot(aes(x=WASPS.part))+  geom_histogram()+
+  facet_wrap(~pais)+
+  xlab("")+
+  ylab("Frecuencia") + theme_minimal()
+
+hist.leader <-cses5_ap5  %>% ggplot(aes(x=WASPS.leader))+  geom_histogram()+
+  facet_wrap(~pais)+
+  xlab("")+
+  ylab("Frecuencia") + theme_minimal()
+
+hist.part
+
+hist.leader
+```
+
+```{r Simple code, eval=FALSE, include=FALSE}
+
+#Revisar posibilidad de simplificar el codigo y ademas hacerlo reproducible
+
+namesvar<-names(cses5_ap3)
+
+var_parido<-which(grepl("^VotParl",namesvar))
+var_parido2 <- namesvar[var_parido]
+
+
+var_lider <-which(grepl("^LikeLeader",namesvar))
+var_lider2 <- namesvar[var_lider]
+
+```
+
+
+```{r AP por pais - partidos}
+API.pais <- cses5_ap5 %>% group_by(pais) %>% 
+  summarise(m.WASP.part = mean(WASPS.part, na.rm = TRUE),
+            m.WASP.leader = mean(WASPS.leader, na.rm = TRUE),
+            error.standar.WASP.part = sd(WASPS.part, na.rm = TRUE)/sqrt(n()),
+            error.standar.WASP.leader = sd(WASPS.leader, na.rm = TRUE)/sqrt(n()))
+
+mean(API.pais$m.WASP.part)
+
+plot.API <- ggplot(API.pais, aes(x = reorder(pais, -m.WASP.part), y = m.WASP.part))  +
+  labs(x="",
+       y="Affective polarization",
+       title = "Mean levels of affective polarization by country",
+       subtitle = "Like-dislike for political parties",
+       caption = "Notes = Thick and thin lines are 90% and 95% confidence intervals, respectively.",
+       tag = "Fig. 1") +
+  geom_point() +
+  geom_hline(yintercept = mean(API.pais$m.WASP.part), linetype = "longdash") +
+  geom_text(aes(x=mean(API.pais$m.WASP.part), label= paste0("Mean\n 2.1"), y= 3.5), 
+            color = "black", size = 3.5) + 
+  geom_line() +
+  coord_flip() +
+   geom_errorbar(aes(ymin = m.WASP.part-1.96*error.standar.WASP.part,
+                    ymax = m.WASP.part+1.96*error.standar.WASP.part),
+                width = .1) + theme_minimal() + theme(plot.caption = element_text(hjust = 0, size = 8)) + scale_y_continuous(limits = c(0,5), breaks = seq(from = 0, to = 5, by = 1))
+
+plot.API
+```
+```{r include=FALSE}
+library(showtext)
+font_add("Arial", "/Library/Fonts/Arial.ttf")  # Use the actual file path
+showtext_auto()
+```
+
+
+```{r}
+
+#mean(API.pais$m.WASP.leader)
+
+plot.API.leader <- ggplot(API.pais, aes(x = reorder(pais, -m.WASP.leader), y = m.WASP.leader))  +
+  labs(x="",
+      y="Affective polarization",
+       title = "Mean levels of affective polarization by country",
+       subtitle = "Like-dislike for leaders",
+       caption = "Notes = Thick and thin lines are 90% and 95% confidence intervals, respectively.",
+       tag = "Fig. 2") +
+  geom_point() +
+  geom_hline(yintercept = mean(API.pais$m.WASP.leader), linetype = "longdash") +
+  geom_text(aes(x=mean(API.pais$m.WASP.leader), label= paste0("Mean\n 2.4"), y= 3.5), 
+            color = "black", size = 3.5) + 
+  geom_line() +
+  coord_flip() +
+   geom_errorbar(aes(ymin = m.WASP.leader-1.96*error.standar.WASP.leader,
+                    ymax = m.WASP.leader+1.96*error.standar.WASP.leader),
+                width = .1) + theme_minimal() + theme(plot.caption = element_text(hjust = 0,5, size = 8)) + scale_y_continuous(limits = c(0,5), breaks = seq(from = 0, to = 5, by = 1))
+
+plot.API.leader
+
+```
+
+
+```{r}
+
+API.year <- cses5_ap5 %>% group_by(pais, year_election) %>% 
+  summarise(m.WASP.part = mean(WASPS.part, na.rm = TRUE),
+            error.standar.WASP.part = sd(WASPS.part, na.rm = TRUE)/sqrt(n()),
+            m.WASP.leader = mean(WASPS.leader, na.rm = TRUE),
+            error.standar.WASP.leader = sd(WASPS.leader, na.rm = TRUE)/sqrt(n()))
+
+
+plot.API.year <- ggplot(API.year, aes(x = year_election, y = m.WASP.part))+ facet_wrap(~pais)+ 
+  labs(x="",
+       y="Spread-of-scores",
+       title = "Yearly evolution of affective polarization",
+       subtitle = "Like-dislike to political parties",
+       caption = "Data = Modules 1-5, Comparative Study of Electoral Systems (CSES)",
+       tag = "Figure 4") +
+  geom_point() + geom_smooth(method = "lm", se=FALSE) + theme_minimal() + theme(plot.caption = element_text(hjust = 0,5, size = 8),
+      axis.text.x = element_text(angle = 60, size = 8),
+      axis.text=element_text(size=4),
+      panel.spacing.x = unit(4, "mm"))
+
+plot.API.year
+
+#ggsave("year_ap.png", plot.API.year)
+
+```
+
+```{r}
+
+plot.API.year.leader <- ggplot(API.year, aes(x = year_election, y = m.WASP.leader))+ facet_wrap(~pais)+ 
+  labs(x="",
+    y="Spread-of-scores",
+       title = "Yearly evolution of affective polarization",
+       subtitle = "Like-dislike to leaders",
+       caption = "Data = Modules 1-5, Comparative Study of Electoral Systems (CSES)",
+       tag = "Figure 5") +
+  geom_point() + geom_smooth(method = "lm", se=FALSE) + theme_minimal() + theme(plot.caption = element_text(hjust = 0,5, size = 8),
+      axis.text.x = element_text(angle = 60, size = 8),
+      panel.spacing.x = unit(5, "mm"))
+
+plot.API.year.leader
+
+```
+### Limitaciones del WASPS
+
+El problema principal es que no permite dilucidar los componentes intra-inter grupales de la polarización afectiva
+
+## WAPD o Mean distance from the most-liked party
+
+Según Wagner (2020) existe otra medida de polarización afectiva que entiende como la distancia media ponderada del grupo de votantes o líder de partido con más agrado. Esta medida requiere identificación posiita con un grupo de votantes o un líder específico y captura cuanto un individuo, en promedio, le desagradan otros electores y otros líderes comparados con su propio grupo o líder. Para calcular la distancia media ponderada, la formula es la siguiente:
+
+
+\[WAPD_{i} = \sqrt{\sum_{g=1}^g V_{g} *(Like_{ig} - {Like}_{max i})^2}\]
+
+donde \[{g}\] es el grupo ajeno (electores o líderes), \[{i}\] cada individuo \[{{Like}_{max i}}\] el valor agregado asignado al grupo con el que se identifica el individuo, es decir, el mayor agrado (10) y \[{{Like}_{ig}}\] el valor de agrado hacia a cada out-group \[{g}\]. Por último, \[{Vg}\] es el tamaño de cada partido. Esta medida puede ser:
+1. Los resultados de las elecciones más recientes.
+2. El promedio de intención de voto de cada partido.
+
+El índice está computado respectivamente para los electores de los diferentes países usando "termómetros de sentimiento" con una escala del 0 al 10, donde 0 significa "sentifimiento desfavorable" y 10 significa "sentimientos favorables". El índice está calculado solo para aquellos que declaran algún nivel de afecto por, al menos, dos partidos o líderes.
+
+### Agrado por partido/líder propio (In-group)
+
+Esta variable va de menor a mayor agrado en una escala de 0 a 100
+
+\[Like_{ig} = {Like}_{max i}\]
+
+```{r include=FALSE}
+
+names(cses5_ap5)
+
+like.part <- cses5_ap5 %>% select(LikePartA:LikePartI)
+like.leader <- cses5_ap5 %>% select(LikeLeaderA:LikeLeaderI)
+
+cses5_ap5$maxlikepart <- apply(like.part, 1, max, na.rm = T)
+cses5_ap5$maxlikeleader <- apply(like.leader, 1, max, na.rm = T)
+
+#Distance from most liked party
+#egen maxlike_help=rowmax(IMD3008_A-IMD3008_I)
+
+cses5_ap5 <- cses5_ap5 %>% mutate(
+wgt.likedistA=Nor.VotA*(LikePartA-maxlikepart)^2,
+wgt.likedistB=Nor.VotB*(LikePartB-maxlikepart)^2,
+wgt.likedistC=Nor.VotC*(LikePartC-maxlikepart)^2,
+wgt.likedistD=Nor.VotD*(LikePartD-maxlikepart)^2, 
+wgt.likedistE=Nor.VotE*(LikePartE-maxlikepart)^2, 
+wgt.likedistF=Nor.VotF*(LikePartF-maxlikepart)^2,
+wgt.likedistG=Nor.VotG*(LikePartG-maxlikepart)^2, 
+wgt.likedistH=Nor.VotH*(LikePartH-maxlikepart)^2, 
+wgt.likedistI=Nor.VotI*(LikePartI-maxlikepart)^2,
+wgt.likedistleaderA=Nor.VotA*(LikeLeaderA-maxlikeleader)^2,
+wgt.likedistleaderB=Nor.VotB*(LikeLeaderB-maxlikeleader)^2,
+wgt.likedistleaderC=Nor.VotC*(LikeLeaderC-maxlikeleader)^2,
+wgt.likedistleaderD=Nor.VotD*(LikeLeaderD-maxlikeleader)^2, 
+wgt.likedistleaderE=Nor.VotE*(LikeLeaderE-maxlikeleader)^2, 
+wgt.likedistleaderF=Nor.VotF*(LikeLeaderF-maxlikeleader)^2,
+wgt.likedistleaderG=Nor.VotG*(LikeLeaderG-maxlikeleader)^2, 
+wgt.likedistleaderH=Nor.VotH*(LikeLeaderH-maxlikeleader)^2, 
+wgt.likedistleaderI=Nor.VotI*(LikeLeaderI-maxlikeleader)^2,
+sumlikedist.wgt = sum(wgt.likedistA, wgt.likedistB, wgt.likedistC, wgt.likedistD,
+                      wgt.likedistE, wgt.likedistF, wgt.likedistG, wgt.likedistH, 
+                      wgt.likedistI, na.rm = TRUE),
+sumlikedistleader.wgt = sum(wgt.likedistleaderA, wgt.likedistleaderB, wgt.likedistleaderC, wgt.likedistleaderD, wgt.likedistleaderE, wgt.likedistleaderF, wgt.likedistleaderG, wgt.likedistleaderH, wgt.likedistleaderI, na.rm = TRUE),
+likedistap = ifelse(sumlikedist.wgt == 0,NA, sqrt(sumlikedistleader.wgt)),
+likedistleaderap = ifelse(sumlikedistleader.wgt == 0, NA, sqrt(sumlikedistleader.wgt)))
+
+summary(cses5_ap5$likedistap)
+summary(cses5_ap5$likedistleaderap)
+
+
+
+```
+
+
+```{r Plot mean distance like-dislike}
+
+likedist.pais <- cses5_ap5 %>% group_by(pais) %>% 
+summarise(m.WASD.part = mean(likedistap, na.rm = TRUE),
+            m.WASD.leader = mean(likedistleaderap, na.rm = TRUE),
+            error.standar.WASD.part = sd(likedistap, na.rm = TRUE)/sqrt(n()),
+            error.standar.WASD.leader = sd(likedistleaderap, na.rm = TRUE)/sqrt(n()))
+
+mean(likedist.pais$m.WASD.part)
+
+plot.likedist <- ggplot(likedist.pais, aes(x = reorder(pais, -m.WASD.part), y = m.WASD.part))  +
+  labs(x="",
+       y="Affective polarization",
+       title = "Affecive polarization by country",
+       subtitle = "Mean distance from the most-liked party",
+       caption = "Notes = Thick and thin lines are 90% and 95% confidence intervals, respectively.",
+       tag = "Fig. 7") +
+  geom_point() +
+  geom_hline(yintercept = mean(likedist.pais$m.WASD.part), linetype = "longdash") +
+  geom_text(aes(x=mean(likedist.pais$m.WASD.part), label= paste0("Media\n 3.9"), y= 3.5), 
+            color = "black", size = 3.5) + 
+  geom_line() +
+  coord_flip() +
+   geom_errorbar(aes(ymin = m.WASD.part-1.96*error.standar.WASD.part,
+                    ymax = m.WASD.part+1.96*error.standar.WASD.part),
+                width = .1) + theme_minimal() + theme(plot.caption = element_text(hjust = 0,5, size = 8))
+
+plot.likedist
+```
+
+```{r}
+
+library(reshape2)
+library(ggplot2)
+
+names(API.pais)
+names(likedist.pais)
+
+WASP.WASD <- left_join(API.pais, likedist.pais, by = "pais")
+
+WASP.WASD.g <- WASP.WASD %>% gather(variable, valor, c(pais, m.WASD.part, m.WASP.part), -pais)
+
+plot.WASP.WASD <- ggplot(WASP.WASD.g, aes(x = reorder(pais,-valor), y = valor, color = variable, shape = variable))  + geom_point() +
+  labs(x="",
+       y="Affective polarization",
+       title = "Mean levels of affective polarization by country",
+       subtitle = "Like-dislike for political parties",
+       caption = "Note: Dashed lines are the average affective polarizarion for each measure\n Thick and thin lines are 90% and 95% confidence intervals, respectively. \n Data = Modules 1-5, Comparative Study of Electoral Systems (CSES)") +
+  geom_point(aes()) +
+  geom_hline(yintercept = mean(WASP.WASD$m.WASD.part), linetype = "longdash") +
+  geom_hline(yintercept = mean(WASP.WASD$m.WASP.part), linetype = "longdash") +
+  geom_line() +
+  coord_flip() +
+   geom_errorbar(aes(ymin = WASP.WASD$m.WASD.part-1.96*error.standar.WASD.part,
+                    ymax = WASP.WASD$m.WASD.part+1.96*error.standar.WASD.part),
+                width = .1, color = "black") +
+ geom_errorbar(aes(ymin = WASP.WASD$m.WASP.part-1.96*error.standar.WASP.part,
+                    ymax = WASP.WASD$m.WASP.part+1.96*error.standar.WASP.part),
+                width = .1) + theme_minimal() + 
+  theme(plot.caption = element_text(hjust = 0, size = 8, face = "italic"),
+        legend.position = "bottom") + 
+  scale_y_continuous(limits = c(0,5), breaks = seq(from = 0, to = 5, by = 1)) +
+  scale_color_manual(name = "",values = c("black", "black")) + 
+  scale_shape_manual(name = "",labels = c("Mean distance, weighted","Spread-of-scores, weighted"),values = c(17,15)) +
+  guides(colour = "none")
+
+plot.WASP.WASD
+
+#ggsave("AP.png", plot.WASP.WASD)
+
+```
+
+```{r}
+
+WASP.WASD.leader <- WASP.WASD %>% gather(variable, valor, c(pais, m.WASD.leader, m.WASP.leader), -pais)
+
+plot.WASP.WASD.leader <- ggplot(WASP.WASD.leader, aes(x = reorder(pais,-valor), y = valor, color = variable, shape = variable))  + geom_point() +
+  labs(x="",
+       y="Affective polarization",
+       title = "Mean levels of affective polarization by country",
+       subtitle = "Like-dislike for leaders",
+       caption = "Note: Dashed lines are the average affective polarizarion for each measure\n Thick and thin lines are 90% and 95% confidence intervals, respectively. \n Data = Modules 1-5, Comparative Study of Electoral Systems (CSES)") +
+  geom_point(aes()) +
+  geom_hline(yintercept = mean(WASP.WASD$m.WASD.leader), linetype = "longdash") +
+  geom_hline(yintercept = mean(WASP.WASD$m.WASP.leader), linetype = "longdash") +
+  geom_line() +
+  coord_flip() +
+   geom_errorbar(aes(ymin = WASP.WASD$m.WASD.leader-1.96*error.standar.WASD.leader,
+                    ymax = WASP.WASD$m.WASD.leader+1.96*error.standar.WASD.leader),
+                width = .1, color = "black") +
+ geom_errorbar(aes(ymin = WASP.WASD$m.WASP.leader-1.96*error.standar.WASP.leader,
+                    ymax = WASP.WASD$m.WASP.leader+1.96*error.standar.WASP.leader),
+                width = .1) + theme_minimal() + 
+  theme(plot.caption = element_text(hjust = 0, size = 8, face = "italic"),
+        legend.position = "bottom") + 
+  scale_y_continuous(limits = c(0,5), breaks = seq(from = 0, to = 5, by = 1)) +
+  scale_color_manual(name = "",values = c("black", "black")) + 
+  scale_shape_manual(name = "",labels = c("Mean distance, weighted","Spread-of-scores, weighted"),values = c(17,15)) +
+  guides(colour = "none")
+
+plot.WASP.WASD.leader
+
+#ggsave("AP_leaders.png", plot.WASP.WASD.leader)
+
+```
+
+
+#Dependant variable: Party identification
+#IV: AP measures
+
+```{r Partisanship, include=FALSE}
+#Partisanship 
+
+table(cses5_ap5$E3024_1)
+
+cses5_ap5$id_pp <- ifelse(cses5_ap5$E3024_1 > 1, NA,cses5_ap5$E3024_1)
+
+table(cses5_ap5$id_pp)
+
+mean(cses5_ap5$id_pp, na.rm = T)*100
+
+cses5_ap5$id_pp_re <- ifelse(cses5_ap5$id_pp == 1, c("Partisan"),c("No ID"))
+
+
+```
+
+```{r Regions, include=FALSE}
+
+cses5_ap5$region <- NA
+cses5_ap5$region[cses5_ap5$pais == "Spain"] <- "Europe"
+cses5_ap5$region[cses5_ap5$pais == "France"] <- "Europe"
+cses5_ap5$region[cses5_ap5$pais == "Portugal"] <- "Europe"
+cses5_ap5$region[cses5_ap5$pais == "Italy"] <- "Europe"
+cses5_ap5$region[cses5_ap5$pais == "Greece"] <- "Europe"
+cses5_ap5$region[cses5_ap5$pais == "Brazil"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Uruguay"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Mexico"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Peru"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Chile"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Costa Rica"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Argentina"] <- "Latin America"
+cses5_ap5$region[cses5_ap5$pais == "Canada"] <- "North America"
+cses5_ap5$region[cses5_ap5$pais == "United States of America"] <- "North America"
+
+```
+
+# Correlations
+
+```{r include=FALSE}
+#Identificacion partidista
+
+id_pp_desc <- cses5_ap5 %>% group_by(id_pp_re) %>%
+dplyr::summarise(mitjana=mean(WASPS.part,na.rm = TRUE),
+desv=sd(WASPS.part,na.rm = TRUE),
+mediana=median(WASPS.part,na.rm = TRUE),
+max=max(WASPS.part,na.rm = TRUE),
+min=min(WASPS.part,na.rm = TRUE))
+
+
+id_pp_desc
+```
+
+
+```{r include=FALSE}
+cses5_ap5 %>% filter(!is.na(id_pp_re)) %>% ggplot(aes(factor(id_pp_re),WASPS.part)) +
+geom_boxplot() +
+labs(y="AP-WASPS-Part",
+x="Party identification") +
+theme_minimal()
+
+```
+```{r include=FALSE}
+
+hist(cses5_ap5$WASPS.part)
+
+mean(cses5_ap5$WASPS.leader)
+
+var(cses5_ap5$WASPS.leader)
+
+pm_id_pp <- lm(WASPS.part ~ id_pp_re, data = cses5_ap5)
+
+```
+
+
+
+# Logistic regression - bivariate models
+## Dependent variable: Party Identification
+
+```{r include=FALSE}
+
+m1 <- glm(id_pp ~ WASPS.part + factor(region), family = binomial, data = cses5_ap5) 
+
+m2 <- glm(id_pp ~ WASPS.leader + factor(region), family = binomial, data = cses5_ap5)
+
+m3 <- glm(id_pp ~ likedistleaderap + factor(region), family = binomial, data = cses5_ap5) 
+
+m4 <- glm(id_pp ~ likedistap + factor(region) , family = binomial, data = cses5_ap5)
+
+stargazer(m1,m2, type = "text")
+
+library(jtools)
+
+plot_summs(m1,m2,m3,m4, coefs = c("Leaders Mean distance, weighted" = "likedistleaderap", "Leaders Spread-of-scores, weighted" = "WASPS.leader" , "Parties Mean distance, weighted" = "likedistap", "Parties Spread-of-scores, weighted" = "WASPS.part"), scale = T, robust = T) + theme(legend.position="none") 
+
+```
+```{r include=FALSE}
+library(margins)
+
+marg1 <- margins(m1)
+
+summary(marg1)
+
+plot(marg1)
+```
+
+
+```{r include=FALSE}
+
+export_summs(m1,m2,m3,m4, coefs = c("Leaders Mean distance, weighted" = "likedistleaderap", "Leaders Spread-of-scores, weighted" = "WASPS.leader" , "Parties Mean distance, weighted" = "likedistap", "Parties Spread-of-scores, weighted" = "WASPS.part", "Constant" = "(Intercept)"), robust = "HC3")
+```
+# Dependent variable: Affective Polarization
+
+## IV: Party Identification
+
+```{r include=FALSE}
+#Al ser la variable independiente, una variable categorica (dicotomica) la mejor forma de hacer el análisis bivariado es observando la diferencia entre las medias para cada rango, p.ej., el nivel de AP cuando la identificación partidística cobre el valor =  1. Esto se puede hacer ejecutando varios t.tests o en una tabla
+
+p1 <- t.test(WASPS.part~id_pp_re,data=cses5_ap5)
+
+p2 <- t.test(WASPS.leader ~ id_pp_re, data=cses5_ap5)
+
+p3<- t.test(likedistleaderap ~ id_pp_re, data = cses5_ap5)
+
+p4 <- t.test(likedistap ~ id_pp_re, data = cses5_ap5)
+
+desc_means_idpp <- cses5_ap5 %>% filter(!is.na(id_pp_re)) %>%  group_by(id_pp_re) %>%
+dplyr::summarise("Parties Spread-of-scores"=mean(WASPS.part,na.rm = TRUE),
+                 "Leaders Spread-of-scores"=mean(WASPS.leader,na.rm = TRUE),
+                 "Parties Mean distance"=mean(likedistap,na.rm = TRUE),
+                 "Leaders Mean distance"=mean(likedistleaderap,na.rm = TRUE)) %>% rename("Party ID" = "id_pp_re")
+
+table(cses5_ap5$id_pp_re)
+
+desc_sd_idpp <- cses5_ap5 %>% filter(!is.na(id_pp_re)) %>%  group_by(id_pp_re) %>%
+dplyr::summarise("Parties Spread-of-scores"=sd(WASPS.part,na.rm = TRUE),
+                 "Leaders Spread-of-scores"=sd(WASPS.leader,na.rm = TRUE),
+                 "Parties Mean distance"=sd(likedistap,na.rm = TRUE),
+                 "Leaders Mean distance"=sd(likedistleaderap,na.rm = TRUE)) %>% rename("Party ID" = "id_pp_re")
+
+
+ci_idpp <- as.data.frame(cbind(p1$conf.int, p2$conf.int, p3$conf.int, p4$conf.int)) %>% mutate_if(is.numeric, round, digits = 3)
+
+ap_measures_colnames <- c("Parties Spread-of-scores", "Leaders Spread-of-scores","Parties Mean distance", "Leaders Mean distance")
+
+colnames(ci_idpp) <- ap_measures_colnames
+
+ci_idpp <- tibble::rownames_to_column(ci_idpp, "CI")
+ci_idpp$CI[ci_idpp$CI == "1"] <- "lb"
+ci_idpp$CI[ci_idpp$CI == "2"] <- "ub"
+
+long_ci_idpp <- ci_idpp %>% gather(key = "AP_measure", value = conf.inter, -CI) %>% spread("CI", value = conf.inter) %>% unite("95% CI",lb,ub,sep = ",", remove = T)
+
+desc_means_idpp
+desc_sd_idpp
+
+long_means_idpp <- desc_means_idpp %>% gather(key = "AP_measure", value = means, -"Party ID") %>% spread(key = "Party ID", value = means) %>% rename("No ID (Mean)" = "No ID",
+                   "Partisan (Mean)" = "Partisan")
+long_means_idpp
+
+long_sd_idpp <- desc_sd_idpp %>% gather(key = "AP_measure", value = sd, -"Party ID") %>% spread(key = "Party ID", value = sd) %>% mutate(across(is.numeric, round, digits=2)) %>% rename("No ID (SD)" = "No ID",
+                                                       "Partisan (SD)" = "Partisan")
+long_sd_idpp
+
+mean_sd_idpp <- left_join(long_means_idpp, long_sd_idpp,  by = "AP_measure")
+desc_idpp <- left_join(mean_sd_idpp, long_ci_idpp,  by = "AP_measure")
+```
+
+
+```{r}
+desc_idpp <- desc_idpp %>% mutate("Mean difference" = round(`Partisan (Mean)`-`No ID (Mean)`, digits = 3))
+
+library(formattable)
+
+formattable(desc_idpp)
+```
+
+```{r}
+
+
+ap_m1 <- lm(WASPS.part ~ id_pp + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*id_pp, data = cses5_ap5) 
+
+ap_m2 <- lm(WASPS.leader ~ id_pp + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*id_pp, data = cses5_ap5)
+
+ap_m3 <- lm(likedistap ~ id_pp + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*id_pp, data = cses5_ap5)
+
+ap_m4 <- lm(likedistleaderap ~id_pp + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*id_pp, data = cses5_ap5) 
+
+stargazer(ap_m1,ap_m2, ap_m3, ap_m4, align = T, title = 'Results', type = "text", dep.var.labels = ap_measures_colnames, ci=TRUE, ci.level=0.90, covariate.labels = c("Party Identification", "Europe","Latin America", "Party Identification*Europe","Party Identification*Latin America" ))
+
+```
+```{r}
+
+plot_summs(ap_m1,ap_m2,ap_m3,ap_m4, coefs = c("Party Identification" = "id_pp", "Europe" = '`relevel(factor(region), ref = "North America")`Europe',  "Latin America" = '`relevel(factor(region), ref = "North America")`Latin America', "Party Identification*Europe" = 'id_pp:`relevel(factor(region), ref = "North America")`Europe', "Party Identification*Latin America" = 'id_pp:`relevel(factor(region), ref = "North America")`Latin America'),  model.names = ap_measures_colnames, scale = T, robust = T) + theme(legend.title = element_blank()) 
+
+
+```
+
+
+
+```{r Clustered standar errors, include=FALSE}
+#Clustered standar errors
+
+library(sandwich)
+library(lmtest)
+
+fitted_m1_clustered <- coeftest(ap_m1, vcov = vcovHC, type = "HC1", cluster = ~region)
+
+tidy(fitted_m1_clustered, conf.int = T) %>% filter(term == "id_pp")
+
+summ(ap_m1, robust = "HC1")
+```
+
+## Party identification + Fixed effects 
+
+```{r eval=FALSE, include=FALSE}
+
+library(gplots)
+
+plotmeans(WASPS.part ~ pais, main="Heterogeineity across countries", data=cses5_ap5)
+#plotmeans draw a 95% confidence interval around the means
+
+plotmeans(WASPS.part ~ year_election, main="Heterogeineity across countries", data=cses5_ap5)
+
+detach("package:gplots")
+```
+
+```{r}
+
+fixed.countries_idpp1 <- lm(WASPS.part~id_pp + factor(pais) + factor(year_election) -1, data=cses5_ap5)
+
+fixed.countries_idpp2 <- lm(WASPS.leader ~ id_pp + factor(pais) - 1, data = cses5_ap5)
+
+fixed.countries_idpp3 <- lm(likedistap ~ id_pp + factor(pais) - 1, data = cses5_ap5)
+
+fixed.countries_idpp4 <- lm(likedistleaderap ~id_pp + factor(pais) - 1, data = cses5_ap5) 
+
+stargazer(fixed.countries_idpp1,fixed.countries_idpp2,fixed.countries_idpp3,fixed.countries_idpp4, type = "text", keep = "id_pp", title = 'Results with country and year fixed effects', dep.var.labels = ap_measures_colnames, ci=TRUE, ci.level=0.90, covariate.labels = "Party Identification")
+
+
+```
+
+
+## IV: Satisfaction for democracy
+
+```{r}
+
+glimpse(cses5_ap5$E3023)
+
+summary(cses5_ap5$E3023)
+
+cses5_ap5$sat_dem <- ifelse(cses5_ap5$E3023 > 6, NA,7-cses5_ap5$E3023)
+
+
+cses5_ap5$sat_dem_re <- NA
+cses5_ap5$sat_dem_re[cses5_ap5$E3023 < 3] <- 1
+cses5_ap5$sat_dem_re[cses5_ap5$E3023 == 4] <- 0
+cses5_ap5$sat_dem_re[cses5_ap5$E3023 == 5] <- 0
+cses5_ap5$sat_dem_re[cses5_ap5$E3023 == 6] <- 0
+
+cses5_ap5$sat_dem_re <- factor(cses5_ap5$sat_dem_re, levels = c("0","1"), labels = c("No","Yes"))
+
+table(cses5_ap5$sat_dem_re)
+
+round(prop.table(table(cses5_ap5$sat_dem_re))*100, 1)
+
+round(prop.table(table(cses5_ap5$sat_dem_re, useNA = "always"))*100, 1)
+
+ggplot(data=cses5_ap5, aes(x=sat_dem_re))+
+geom_bar(aes(y=..prop..*100, group=1), width=0.5)+facet_wrap(~pais)+
+  labs(x="Support for democracy", y="Percentage", 
+       caption="CSES, 1996-2021")+
+  coord_cartesian(ylim=c(0, 80)) + theme_light()
+
+```
+```{r include=FALSE}
+
+pdem1 <- t.test(WASPS.part~sat_dem_re,data=cses5_ap5)
+pdem1
+
+pdem2 <- t.test(WASPS.leader ~ sat_dem_re, data=cses5_ap5)
+pdem2
+
+pdem3 <- t.test(likedistleaderap ~ sat_dem_re, data = cses5_ap5)
+pdem3
+
+pdem4 <- t.test(likedistap ~ sat_dem_re, data = cses5_ap5)
+pdem4
+
+```
+
+```{r}
+
+cses5_ap5$latamerica <- ifelse(cses5_ap5$region == "Latin America", 1,0)
+cses5_ap5$europe <- ifelse(cses5_ap5$region == "Europe", 1,0)
+
+ap_satdem_m1 <- lm(WASPS.part ~ sat_dem_re + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*sat_dem_re, data = cses5_ap5) 
+
+ap_satdem_m2 <- lm(WASPS.leader ~ sat_dem_re + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*sat_dem_re, data = cses5_ap5)
+
+ap_satdem_m3 <- lm(likedistap ~ sat_dem_re + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*sat_dem_re, data = cses5_ap5)
+
+ap_satdem_m4 <- lm(likedistleaderap ~sat_dem_re + relevel(factor(region), ref = "North America") + relevel(factor(region), ref = "North America")*sat_dem_re, data = cses5_ap5) 
+
+stargazer(ap_satdem_m1,ap_satdem_m2, ap_satdem_m3, ap_satdem_m4, align = T, title = 'Results', type = "text", dep.var.labels = ap_measures_colnames, ci=TRUE, ci.level=0.90, covariate.labels = c("Satisfaction for democracy", "Europe","Latin America", "Satisfaction for democracy*Europe","Satisfaction for democracy*Latin America" ))
+
+```
+
+
+
+```{r}
+
+plot_summs(ap_satdem_m1,ap_satdem_m2,ap_satdem_m3,ap_satdem_m4, coefs = c("Satisfaction for democracy" = "sat_dem_re", "Europe" = '`relevel(factor(region), ref = "North America")`Europe',  "Latin America" = '`relevel(factor(region), ref = "North America")`Latin America', "Satisfaction for democracy*Europe" = 'sat_dem_re:`relevel(factor(region), ref = "North America")`Europe', "Satisfaction for democracy*Latin America" = 'sat_dem_re:`relevel(factor(region), ref = "North America")`Latin America'),  model.names = ap_measures_colnames, scale = T, robust = T) + theme(legend.title = element_blank()) 
+
+```
+
+#CSES Round 5
+
+```{r include=FALSE}
+
+#E1005 = Identificador,
+#E3004_3 = Elite Trustworthy,
+#E3004_4 = Elite are main problem,
+#E3004_5 = Leaders Bend Rules, 
+#E3007 = Widesspread Corruption on elites
+#E5102 = Corruption according to Transparency international
+#E5092 = Gini index
+#E5091_1 = Democracy - Autocracy Polity IV
+#E5090_1 = Freedom House rating of freedom in a country
+#E5051 = Type of regime. 0 = Dictatorship, 1 Parliamentary Democracy, 2 Mixed Democracy, 3 Presidential Democracy
+#E3005_1 = OUT-GROUP ATTITUDES: MINORITIES - CUSTOMS AND TRADITIONS
+#E3005_2 = OUT-GROUP ATTITUDES: MINORITIES - WILL OF THE MAJORITY
+#E3005_3 = OUT-GROUP ATTITUDES: IMMIGRANTS GOOD FOR ECONOMY
+#E3005_4 = OUT-GROUP ATTITUDES: CULTURE HARMED BY IMMIGRANTS	
+#E3005_5 = OUT-GROUP ATTITUDES: IMMIGRANTS INCREASE CRIME
+#E5107 = LINGUISTIC FRACTIONALIZATION
+#E5108 = RELIGIOUS FRACTIONALIZATION
+#E5109 = ETHNIC FRACTIONALIZATION
+
+
+
+con.cses5 <- read_csv("dades/cses5.csv") %>% select(E1005, E3004_3, E3004_4, E3004_5, E3007, E5102, E5092, E5091_1,E5090_1, E5051, E5107, E5108, E5109, E3005_1, E3005_2, E3005_3, E3005_4, E3005_5)
+cses5_ap6 <- merge(cses5_ap5, con.cses5, by = "E1005")
+
+cses5_ap6$region_re <- factor(cses5_ap6$region, levels = c("Latin America","Europe", "North America"))
+
+```
+
+```{r}
+#Elites Trust
+
+summary(cses5_ap6$E3004_3)
+
+cses5_ap6$con.elites <- ifelse(cses5_ap6$E3004_3 > 5, NA, 6-cses5_ap6$E3004_3)
+
+summary(cses5_ap6$con.elites)
+```
+
+
+```{r}
+#Elite are main problem
+
+summary(cses5_ap6$E3004_4)
+cses5_ap6$problem.elites <- ifelse(cses5_ap6$E3004_4 > 5, NA, 6-cses5_ap6$E3004_4)
+summary(cses5_ap6$problem.elites)
+
+cor.test(cses5_ap6$WASPS.leader, cses5_ap6$problem.elites, method = "pearson")
+cor.test(cses5_ap6$WASPS.part, cses5_ap6$problem.elites, method = "pearson")
+cor.test(cses5_ap6$likedistap, cses5_ap6$problem.elites, method = "pearson")
+cor.test(cses5_ap6$likedistleaderap, cses5_ap6$problem.elites, method = "pearson")
+
+
+```
+
+
+```{r}
+#Leaders Bend Rules
+
+summary(cses5_ap6$E3004_5)
+cses5_ap6$antirule_leader <- ifelse(cses5_ap6$E3004_5 > 5, NA, 6-cses5_ap6$E3004_5)
+summary(cses5_ap6$antirule_leader)
+```
+
+
+```{r}
+#Corruption
+summary(cses5_ap6$E3007)
+cses5_ap6$corruption <- ifelse(cses5_ap6$E3007 > 4, NA, 5-cses5_ap6$E3007)
+summary(cses5_ap6$corruption)
+
+```
+
+```{r include=FALSE}
+#Corruption TI
+
+summary(cses5_ap6$E5102)
+
+table(cses5_ap6$pais, cses5_ap6$E5102)
+
+cses5_ap6$cpi_index <- ifelse(cses5_ap6$E5102 > 100, NA, 100-cses5_ap6$E5102)
+
+table(cses5_ap6$pais, cses5_ap6$cpi_index)
+
+cses5_ap6$cpi_index_re <- ifelse(cses5_ap6$cpi_index > 40, 1,0)
+
+cses5_ap6$corruption_inter <- cses5_ap6$cpi_index_re*cses5_ap6$corruption
+
+
+summary(cses5_ap6$corruption_inter)
+
+
+
+```
+
+```{r include=FALSE}
+#Satisfaction for democracy
+
+summary(cses5_ap6$E3023)
+
+table(cses5_ap6$E3023)
+
+cses5_ap6$satis_dem <- ifelse(cses5_ap6$E3023 > 5, NA, 6-cses5_ap6$E3023)
+
+summary(cses5_ap6$satis_dem)
+
+```
+
+
+```{r include=FALSE}
+library(corrplot)
+
+names(cses5_ap6)[190:205]
+
+df_cor <- cses5_ap6 %>% select(WASPS.part, WASPS.leader, likedistap, likedistleaderap, c(206:214), id_pp, -region_re) %>% na.omit()
+
+cor_matrix <- cor(df_cor, method = "pearson")
+
+corrplot(cor_matrix, method = "color", order = "hclust", type = "upper")
+
+```
+
+```{r}
+
+df_cor_region <- cses5_ap6 %>% select(WASPS.part, WASPS.leader, likedistap, likedistleaderap, c(206:214), id_pp) %>% na.omit() %>% group_by(region_re) %>% do(cormat = cor(select(., -matches("region_re")))) %>%  pull(cormat) %>% melt
+
+df_cor_region$value <- round(df_cor_region$value, 4)
+
+df_cor_region2 <- cses5_ap6 %>% select(WASPS.part, WASPS.leader, likedistap, likedistleaderap, c(206:214), id_pp, E5102) %>% na.omit() %>% group_by(region_re) %>% group_modify(.f = ~ as.data.frame(t(cor(select(.x, everything()),.x[['disp']]))))
+
+var1 <- colnames(df_cor_region2)[-1]
+var1 <- rep(var1, 3)
+
+df_cor_region3 <- cbind(df_cor_region2, var1 = var1)
+df_cor_region3 <- df_cor_region3[,c(1,16,2:15)]
+
+df_cor_region3 <- df_cor_region3 %>% mutate_if(is.numeric, round, digits = 5)
+
+cortable <- df_cor_region3[,c(1:6)]
+cortable
+
+```
+
+```{r Correlation test, include=FALSE}
+library(psych)
+pairs.panels(df_cor)
+
+```
+
+
+```{r Elites perceived as trustworthy, include=FALSE}
+
+cor.test(cses5_ap6$WASPS.leader, cses5_ap6$con.elites)
+
+cor.test(~ WASPS.leader + con.elites, data = subset(cses5_ap6,region == "Latin America"))
+
+
+```
+
+
+```{r}
+
+df_con <- cses5_ap6 %>% group_by(region, pais) %>% 
+  dplyr::summarise(n = n(),
+            m.con.elites = mean(con.elites, na.rm = TRUE),
+            error.standar.con.elites = sd(con.elites, na.rm = TRUE)/sqrt(n()),
+            m.WASD.part = mean(likedistap, na.rm = TRUE),
+            m.WASD.leader = mean(likedistleaderap, na.rm = TRUE),
+            error.standar.WASD.part = sd(likedistap, na.rm = TRUE)/sqrt(n()),
+            error.standar.WASD.leader = sd(likedistleaderap, na.rm = TRUE)/sqrt(n()),
+            m.WASP.part = mean(WASPS.part, na.rm = TRUE),
+            m.WASP.leader = mean(WASPS.leader, na.rm = TRUE),
+            error.standar.WASP.part = sd(WASPS.part, na.rm = TRUE)/sqrt(n()),
+            error.standar.WASP.leader = sd(WASPS.leader, na.rm = TRUE)/sqrt(n()))
+
+ggplot(df_con,aes(m.con.elites,m.WASD.part)) +
+geom_point() +
+geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
+
+```
+
+
+
+```{r}
+
+long_con <- df_con %>% gather(key = variable, value = value, -m.con.elites,-pais,-region,-n) %>% filter(!str_detect(variable, "error"))
+
+ggplot(subset(long_con,variable == "m.WASD.leader"),aes(m.con.elites,value)) +
+geom_point() +
+geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
+
+
+ggplot(subset(long_con,variable == "m.WASD.part"),aes(m.con.elites,value)) +
+geom_point() +
+geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
+
+ggplot(subset(long_con,variable == "m.WASP.part"),aes(m.con.elites,value)) +
+geom_point() +
+geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
+
+ggplot(subset(long_con,variable == "m.WASP.leader"),aes(m.con.elites,value)) +
+geom_point() +
+geom_smooth(method="lm") + facet_wrap(~region) + theme_light()
+
+
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+library(Rmisc)
+
+long_scores <- cses5_ap6 %>% select(region, WASPS.part, WASPS.leader, likedistap, likedistleaderap) %>%  gather(key=AP_measure,value=score,-region) %>% mutate(region = factor(region),
+                                                                 AP_measure =  factor(AP_measure))
+
+sum_scores <- summarySE(long_scores, measurevar =  "score",
+                            groupvar = c("region", "AP_measure"), na.rm = TRUE)
+sum_scores
+```
+
+
+```{r eval=FALSE, include=FALSE}
+ggplot(cses5_ap6, aes(x=WASPS.part, y=con.elites))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+ #agregar línea de tendencia
+  geom_text(data=cses5_ap6, aes(label=pais), cex=2.5, nudge_y = 0.02, check_overlap = T)+ #Pata etiquetar los puntos, darles un tamalo, ubicación y prevenir que se sobrepongan
+  labs(x="Elites are trustworthy", y="Affective Polarization")+ #para etiquetar los ejes
+  theme_light()
+
+```
+
+
+```{r include=FALSE}
+
+olm1 <- lm(con.elites ~ WASPS.part + factor(region),  data = cses5_ap6) 
+
+olm2 <- lm(con.elites ~ WASPS.leader + factor(region),  data = cses5_ap6)
+
+olm3 <- lm(con.elites ~ likedistleaderap + factor(region),  data = cses5_ap6) 
+
+olm4 <- lm(con.elites ~ likedistap + factor(region) ,  data = cses5_ap6)
+
+stargazer(olm1,olm2,olm3,olm4, type = "text", align = T, dep.var.labels = c("Trust in elites"),
+          covariate.labels=c("Leaders Mean distance, weighted", "Leaders Spread-of-scores, weighted", "Parties Mean distance, weighted", "Parties Spread-of-scores", "Latin America","North America","Constant"),
+          title = "OLM") 
+
+plot_summs(olm1,olm2,olm3,olm4, coefs = c("Leaders Mean distance, weighted" = "likedistleaderap", "Leaders Spread-of-scores, weighted" = "WASPS.leader" , "Parties Mean distance, weighted" = "likedistap", "Parties Spread-of-scores, weighted" = "WASPS.part"), scale = T, robust = T) + theme(legend.position="none")
+
+
+
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+
+library(ggpubr)
+plots.WASP.WASD <- ggarrange(plot.WASP.WASD, plot.WASP.WASD.leader)
+
+plots.WASP.WASD
+
+annotate_figure(plots.WASP.WASD, top =  text_grob("Mean levels of affective polarization by country", color = "black", face = "bold", size = "14"),
+                bottom = text_grob("Note: Dashed lines are the average affective polarizarion for each measure\n Thick and thin lines are 90% and 95% confidence intervals, respectively. \n Data = Modules 1-5, Comparative Study of Electoral Systems (CSES)", color = "black",
+                                   hjust = 0, size = 8, face = "italic"))
+
+```
+
+
+
+### Desagrado por partido/líder ajeno (Out-group)
+
+Mide la media ponderada del desagrado hacia partidos/líderes ajenos, es decir, aquellos grupos con los que no nos sentimos identificados
+
+\[OutDislike_{i} = {\sum_{g=1}^g (V_{g}* {Dislike}_{ig})}\]
+
+donde \[{Dislike}_{ig}\] es el termometro de afecto invertido asignado a cada grupo ajeno \[{g}\]. Como las escalas estan revertidas, esta variable va de mayor a menor agrado
+
+
+```{r eval=FALSE, include=FALSE}
+cses5_ap6 <- cses5_ap5
+library(readxl)
+
+part <- read_excel("dades/Political_Parties.xlsx")
+part <- part[,-8]
+
+part$mod <- NA
+part$mod[part$modulo == 'M1'] <- "mod1"
+part$mod[part$modulo == 'M2'] <- "mod2"
+part$mod[part$modulo == 'M3'] <- "mod3"
+part$mod[part$modulo == 'M4'] <- "mod4"
+part$mod[part$modulo == 'M5'] <- "mod5"
+
+class(part$cod_partido)
+part$cod_partido <- as.character(part$cod_partido)
+
+class(part$mod)
+
+cses5_ap6$max.like.variable <- apply(like.part, 1, which.max)
+
+table(cses5_ap6$max.like.variable)
+
+cses5_ap6$max.like.variable <-factor(cses5_ap6$max.like.variable,
+                                         levels = c('1','2','3','4','5','6','7','8','9'),
+                                         labels = c("A",'B','C','D','E','F','G','H','I'))
+
+
+cses5_ap6$max.like.part <- NA
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "A"] <- cses5_ap6$E5000_A
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "B"] <- cses5_ap6$E5000_B
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "C"] <- cses5_ap6$E5000_C
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "D"] <- cses5_ap6$E5000_D
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "E"] <- cses5_ap6$E5000_E
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "F"] <- cses5_ap6$E5000_F
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "G"] <- cses5_ap6$E5000_G
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "H"] <- cses5_ap6$E5000_H
+cses5_ap6$max.like.part[cses5_ap6$max.like.variable == "I"] <- cses5_ap6$E5000_I
+
+part.code <- cses5_ap6 %>% select(E1005, max.like.part) %>% rename(
+  id = E1005,
+  cod_partido = max.like.part
+) %>% mutate(
+  id = as.character(id), 
+  cod_partido = as.character(cod_partido))
+
+idseq <- rownames(part.code)
+
+part.code$id <- str_c(idseq, part.code$id)
+
+part.code.2 <- read.csv("part.code.2.csv", header = T)
+
+cses5_ap_nom <- cbind(cses5_ap6, part.code.2)
+cses5_ap_nom <- cses5_ap_nom %>% select(!id)
+
+likepart.names <- names(like.part)
+likeleader.names <- names(like.leader)
+
+
+cses5_ap_nom <- cses5_ap_nom %>% rowwise() %>% 
+  mutate(second.max.part = {x <- c_across(likepart.names);
+  if (sum(!is.na(x)) >= 2) tail(head(likepart.names[order(x, decreasing = T)],2),1) else NA},
+  second.max.leader = {y <- c_across(all_of(likeleader.names));
+  if (sum(!is.na(y)) >= 2) tail(head(likeleader.names[order(y, decreasing = T)],2),1) else NA})
+
+cses5_ap_nom$equal.max.part <- apply(cses5_ap_nom[grepl("^Likepart", names(cses5_ap_nom))]== cses5_ap_nom$maxlikepart, 1, any, na.rm = T)
+
+cses5_ap_nom$second.max.part.clean <- str_remove(cses5_ap_nom$second.max.part, "LikePart")
+cses5_ap_nom$second.max.leader.clean <- str_remove(cses5_ap_nom$second.max.leader, "LikeLeader")
+
+cses5_ap_nom$equal.max.part <- if_else(cses5_ap_nom$max.like.variable == cses5_ap_nom$second.max.part.clean, TRUE, F)
+
+table(cses5_ap_nom$equal.max.part)
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+cses5_ap5$maxlikeleader <- apply(like.leader, 1, max, na.rm = T)
+
+cses5_ap5$dislikepart <- apply(cses5_ap5[,116:124], 1, min, na.rm = T)
+cses5_ap5$dislikeleader <- apply(cses5_ap5[,125:133], 1, min, na.rm = T)
+
+table(cses5_ap5$E3015_LH_PL)
+
+
+```
